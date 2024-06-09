@@ -1,88 +1,54 @@
+#This script generates model predictions as well as relevant figures and tables for forecasting Bristol Bay Sockeye returns
+#The various tested models (approximately a dozen) are read in from the helper script "salmon_regression_models_V5_08_03_2023_cyclic_pink_salmon_2.R"
 
-#Do model without pink salmon as a covariate
-
-#install.packages("readxl")
+#Read in packages
 library("readxl")
 library("ggplot2")
 library("tidyverse")
+library(ggplot2)
+library(tidyr)
+library(ggpubr)
 
+#Read in data
+
+#Longterm Bristol Bay catch data
 data1 = read.csv("data/BB-sockeye-catch.csv")
+
+#Longterm Bristol Bay escapement data
 data2 = read.csv("data/BB-sockeye-escapement.csv")
+
+#Bristol Bay length and age dadta through 2020
 data3 = read.csv("data/BBasl_to_2020.csv")
 
-
-Totals = read.csv("data/2021.csv")
-
-
-
-estimate_age_returns = read.csv("data/2021_Return_Tables_Bristol_Bay.csv")
-estimate_age_returns1980_2021 = estimate_age_returns[which(estimate_age_returns[,"Year"] >= 1980),]
-
-estimate_age_returns1979_2020 = estimate_age_returns[which(estimate_age_returns[,"Year"] >= 1979 & estimate_age_returns[,"Year"] <= 2020),]
-
-estimate_age_returns1980_2021_age2 = estimate_age_returns1980_2021[which(estimate_age_returns1980_2021[,"Salt.Water.Age"] == 2),]
-estimate_age_returns1980_2021_age3 = estimate_age_returns1980_2021[which(estimate_age_returns1980_2021[,"Salt.Water.Age"] == 3),]
-
-estimate_age_returns1980_2021_age2_all_rivers = c()
-estimate_age_returns1980_2021_age3_all_rivers = c()
-
-years_1980_2021 = seq(1980, 2021, 1)
-
-for (i in 1:length(years_1980_2021)) 
-  
-{
-  
-  estimate_age_returns1980_2021_age2_all_rivers[i] = sum(estimate_age_returns1980_2021_age2[which(estimate_age_returns1980_2021_age2[,"Year"] == years_1980_2021[i]),"Abundance"])
-  estimate_age_returns1980_2021_age3_all_rivers[i] = sum(estimate_age_returns1980_2021_age3[which(estimate_age_returns1980_2021_age3[,"Year"] == years_1980_2021[i]),"Abundance"])
-  
-}
-
-
-estimate_age_returns1979_2020_age2 = estimate_age_returns1979_2020[which(estimate_age_returns1979_2020[,"Salt.Water.Age"] == 2),]
-estimate_age_returns1979_2020_age3 = estimate_age_returns1979_2020[which(estimate_age_returns1979_2020[,"Salt.Water.Age"] == 3),]
-
-
-estimate_age_returns1979_2020_age2_all_rivers = c()
-estimate_age_returns1979_2020_age3_all_rivers = c()
-
-
-years_1979_2020 = seq(1979, 2020, 1)
-
-for (i in 1:length(years_1979_2020)) 
-  
-{
-  
-  estimate_age_returns1979_2020_age2_all_rivers[i] = sum(estimate_age_returns1979_2020_age2[which(estimate_age_returns1979_2020_age2[,"Year"] == years_1979_2020[i]),"Abundance"])
-  estimate_age_returns1979_2020_age3_all_rivers[i] = sum(estimate_age_returns1979_2020_age3[which(estimate_age_returns1979_2020_age3[,"Year"] == years_1979_2020[i]),"Abundance"])
-  
-}
-
-datatest = data3[which(data3[,"Year"] == 2010),]
-PM2006_2021 = read_excel("data/PMTF_ASL_Data_2006-2021_updated 4-26_V3.xls")
-
-
-data4 = read.csv("data/pink_chum_salmon_total_abundances.csv")
-data5 = data4[20:61,] #truncate so its the starts and ends one year before data1 and 2 (1979 to 2020)
-OceanTemps1 = read.csv("data/SST-BristolBay3.csv")
-OceanTemps1979to2020 = OceanTemps1[32:73,]#Truncate so it starts and ends one year before data1 and 2 1979 to 2020
-OceanTemps1979to2023 = OceanTemps1[32:76,]
-
-pinksalmon = data5[,'pinks']
-pinksalmon_1979to2021 = c(pinksalmon,797) # final 2021 pink salmon was 797 million
-pinksalmon_1979to2022 = c(pinksalmon_1979to2021, 409) 
-
-seq(from = 1979, to = 2021, by = 1)[16]
-
-pinksalmon_1994to2021 = pinksalmon_1979to2021[16:length(pinksalmon_1979to2021)]
-
-sd(pinksalmon, na.rm = TRUE)
-
-t = c(11,12,13,14,15,16)
-t %% 10 
-
+#Length and age dadta for 2021, 2022, and 2023
 seasondata2021 = read_excel("data/FDMS2021_V3.xls")
 seasondata2022 = read_excel("data/FDMS2022.xlsx") #updates
 seasondata2023 = read.csv("data/FDMS2023.csv")
+
+#Preseasons forecast data
+preseason = read.csv("data/Preseason.csv")
+
+#Past reconstructed total run size data
+Totals = read.csv("data/2021.csv") #Bristol Bay sockeye returns from 1950 to 2021
+
+#North Pacific Pink Salmon and Chum Salmon Time series data
+data4 = read.csv("data/pink_chum_salmon_total_abundances.csv")
+
+# 
+# #Age specific returns by watershed
+# estimate_age_returns = read.csv("data/2021_Return_Tables_Bristol_Bay.csv")
+
+#North Pacific Sea surface temperatures
+OceanTemps1 = read.csv("data/SST-BristolBay3.csv")
+
+#Read in helper scripts
+
+source('scripts/Byweeklengthatage_Function4.R')
+source('scripts/meanrelativeerrorcode.R')
+source('scripts/salmon_regression_models_V5_08_03_2023_cyclic_pink_salmon_2.R')
+
+#Section 01. 
+#Purpose: Reformat ASL updates for 2021, 2022 and 2023 seasons to be in same format
 
 seasondata2023$catch_date = format(as.Date(seasondata2023$catch_date, "%m/%d/%Y"), "%Y-%m-%d")
 
@@ -97,15 +63,20 @@ seasondata2023 <- seasondata2023 %>%
 colnames(seasondata2022)
 colnames(seasondata2023)
 
+#Combine the ASL data for 2021 to 2023 (these are the updates to the original ASL dataset which was through 2020)
+
 seasondata2021_2023 = rbind(seasondata2021,seasondata2022,seasondata2023)
 
+#Additional cleaning/reformatting of the dataframe
 Salt.Water.Age = seasondata2021_2023[,'age'] %% 10 
 
 seasondata2021_2023[,'Salt.Water.Age'] = Salt.Water.Age
 
+#Ensure only Sockeye salmon are used (species_code = 420)
+
 seasondata2021_2023V2 = seasondata2021_2023[which(seasondata2021_2023[,'species_code']==420 ),] #Filter for sockeye
 
-
+#Reformatting dataframe, ensure variable types are correct
 seasondata2021_2023V2 = as.data.frame(seasondata2021_2023V2[,c("Length","Salt.Water.Age","sampleDate","Year","ASLProjectType")])
 
 seasondata2021_2023V2 = na.omit(seasondata2021_2023V2)
@@ -118,27 +89,9 @@ Year2021_2023 = as.numeric(unlist(seasondata2021_2023V2[,"Year"]))
 
 ASLProjectType2021_2023 = as.numeric(unlist(seasondata2021_2023V2[,"ASLProjectType"]))
 
-WinterMeanTemp1979to2020 = c()
-SummerMeanTemp1979to2020 = c()
-WinterMeanTemp1979to2023 = c()
-SummerMeanTemp1979to2022 = c()
-
-
-
-for(i in 2:(nrow(OceanTemps1979to2023)))
-{
-  WinterMeanTemp1979to2023[i-1] = mean(rowMeans(OceanTemps1979to2023[i,c(2,3)]), OceanTemps1979to2023[i-1,13])
-  SummerMeanTemp1979to2022[i-1] = rowMeans(OceanTemps1979to2023[i-1,c(7:9)])
-}
-
-plot(SummerMeanTemp1979to2022~seq(1979,2022,1))
-plot(WinterMeanTemp1979to2023~seq(1979,2022,1))
-
-acf(SummerMeanTemp1979to2022)
-acf(WinterMeanTemp1979to2023)
-
 ProjectType2021_2023 = ASLProjectType2021_2023 
 
+#Convert numeric project type IDs to the correct character string
 ASLProjectType= c()
 
 for(i in 1:length(ProjectType2021_2023))
@@ -171,85 +124,54 @@ seasondata2021_2023V2$sampleDate = as.factor(seasondata2021_2023V2$sampleDate)
 
 data3 = data3[,c("Length","Salt.Water.Age","sampleDate","Year","ASLProjectType")]
 #row.names(data3) = c("Length","Salt.Water.Age","sampleDate","Year","ASLProjectType")
+
+#Add 2021 through 2023 ASL data to the original longterm ASL dataset through 2020
+#So this dataset is now from 1979 through 2023
 data3 = rbind(data3,seasondata2021_2023V2)
 
-
-source('scripts/Byweeklengthatage_Function4.R')
-source('scripts/meanrelativeerrorcode.R')
-source('scripts/salmon_regression_models_V5_08_03_2023_cyclic_pink_salmon_2.R')
-
-#write.csv(BBasl_to_2020_clean, 'data/BBasl_to_2020.csv')
-
-#Nushagak district doesn't always specify nushagak or igushik river ie lines 188 to 386
-
-#1 = commercial
-#3 = escapement
-#5 = port moller test fishery
-
-
-data_escapement = data3[which(data3[,"ASLProjectType"] == 'escapement'),]
-data_catch = data3[which(data3[,"ASLProjectType"] == 'commercial catch'),]
 data_all = data3 #Can only use at aggregate level since escapement is by river and commercial catch is by district
 
-data_test_fishery = data3[which(data3[,"ASLProjectType"] == 'test fishing'),]
+#Section 02.
+#Purpose: Wrangle SST and pink salmon time series data so they start and end in correct years. 
+#Need 1980 to 2023 for year t vectors and 1979 to 2022 for year t-1 vectors
 
-PM2006_2021 = data.frame(PM2006_2021[,c("Length","Salt.Water.Age","sampleDate","Year","ASLProjectType")])
-data_test_fishery_before_2006= data_test_fishery[which(data_test_fishery[,"Year"] < 2006),]
+#Wrangle Pink salmon data
+data5 = data4[20:61,] #truncate so its the starts and ends one year before data1 and 2 (1979 to 2020)
+#Wrangle SST data
+OceanTemps1979to2020 = OceanTemps1[32:73,]#Truncate so it starts and ends one year before data1 and 2 1979 to 2020
+OceanTemps1979to2023 = OceanTemps1[32:76,]
 
-PM2006_2021_Length = PM2006_2021$Length
-PM2006_2021_Salt.Water.Age = PM2006_2021$Salt.Water.Age
-PM2006_2021_Year = PM2006_2021$Year
-PM2006_2021_ASLProjectType = as.factor(PM2006_2021$ASLProjectType)
-PM2006_2021_sample_date = as.Date(PM2006_2021$sampleDate)
+pinksalmon = data5[,'pinks']
+pinksalmon_1979to2021 = c(pinksalmon,797) # final 2021 pink salmon was 797 million
+pinksalmon_1979to2022 = c(pinksalmon_1979to2021, 409) 
 
-PM2006_2021 = cbind.data.frame(PM2006_2021_Length,
-                               PM2006_2021_Salt.Water.Age,
-                               PM2006_2021_sample_date,
-                               PM2006_2021_Year,
-                               PM2006_2021_ASLProjectType)
+seq(from = 1979, to = 2021, by = 1)[16]
 
-colnames(PM2006_2021) = c("Length","Salt.Water.Age","sampleDate","Year","ASLProjectType")
-PM2006_2021$sampleDate = as.factor(PM2006_2021$sampleDate)
+pinksalmon_1994to2021 = pinksalmon_1979to2021[16:length(pinksalmon_1979to2021)]
 
+sd(pinksalmon, na.rm = TRUE)
 
-data_test_fishery_full=rbind(data_test_fishery_before_2006,PM2006_2021)
-data_test_fishery_full = na.omit(data_test_fishery_full)
-
-data_test_fishery_full[which(data_test_fishery_full[,"Year"] == 1999),] #few fish just 1 age 2
-
-#remake data_all with new test fishery data set
-data_all=data_all[which(data_all[,"ASLProjectType"] != "test fishing"),] #remove test fishing data
-data_all = rbind(data_all,data_test_fishery_full) #add new test fishing data
-
-t = as.Date(data_all[,"sampleDate"])
-t2 = format(t,"%j")
-days = 170:185
-sample_year = c(data_all[,"Year"])
-years_unique = unique(sample_year)
-sample_size = array(dim = c(length(days),length(years_unique)))
+WinterMeanTemp1979to2020 = c()
+SummerMeanTemp1979to2020 = c()
+WinterMeanTemp1979to2023 = c()
+SummerMeanTemp1979to2022 = c()
 
 
-for(j in 1:length(years_unique))
+
+for(i in 2:(nrow(OceanTemps1979to2023)))
 {
-for(i in 1:length(days))
-  
-{
- 
-  sample_size[i,j] = nrow(data_all[(which(sample_year == years_unique[j] & t2 == days[i])),])
-  }
-  
-  
+  WinterMeanTemp1979to2023[i-1] = mean(rowMeans(OceanTemps1979to2023[i,c(2,3)]), OceanTemps1979to2023[i-1,13])
+  SummerMeanTemp1979to2022[i-1] = rowMeans(OceanTemps1979to2023[i-1,c(7:9)])
 }
 
-rowMeans(sample_size)
+plot(SummerMeanTemp1979to2022~seq(1979,2022,1))
+plot(WinterMeanTemp1979to2023~seq(1979,2022,1))
 
-meanlengthatageescapementdata = mean_length_by_week_function2(data_escapement, 1958, endyear = 2023)
 
-meanlengthatagecatchdata = mean_length_by_week_function2(data_catch, 1958, endyear = 2023)
+#Section 03. 
+#Purpose: Calculate average length at each for each day of the season for years 1958 through 2023
 
 meanlengthatagealldata = mean_length_by_week_function2(data_all, 1958, endyear = 2023) #All data including the test fishery
-
-meanlengthatageportmoller = mean_length_by_week_function2(data_test_fishery_full, 1958, endyear = 2023)
 
 
 x = data.frame(meanlengthatagealldata[[1]]) #age2
@@ -261,59 +183,32 @@ x_percent = x / x[,18]
 
 age3_percent = array(dim = c(63,18))
 age3_percent = age3 / age3[,18]
-  
-library(tidyverse)
-# x_new <- x %>% 
-#   mutate(year=rownames(.)) %>% 
-#   select(year, everything()) %>% 
-#   gather(key="week", value="length_avg", 2:ncol(.)) %>% 
-#   mutate(week=gsub("X", "", week) %>% as.numeric(),
-#          year=as.numeric(year))
-# 
-# 
-# 
-# x_new3 <- x_percent %>% 
-#   mutate(year=rownames(.)) %>% 
-#   select(year, everything()) %>% 
-#   gather(key="week", value="length_avg", 2:ncol(.)) %>% 
-#   mutate(week=gsub("X", "", week) %>% as.numeric(),
-#          year=as.numeric(year))
-# 
-# age3percentlong <- age3_percent %>% 
-#   mutate(year=rownames(.)) %>% 
-#   select(year, everything()) %>% 
-#   gather(key="week", value="length_avg", 2:ncol(.)) %>% 
-#   mutate(week=gsub("X", "", week) %>% as.numeric(),
-#          year=as.numeric(year))
-
-# g <- ggplot(x_new2, aes(x=week, y=length_avg, color=year, group=year)) +
-#   geom_line() +
-#   labs(x="Week", y="Mean length (mm)") +
-#   theme_bw()
-# g
-
-# g2 <- ggplot(x_new3, aes(x=week, y=length_avg, color=year, group=year)) +
-#   geom_line() +
-#   labs(x="Week", y="% of final length") +
-#   theme_bw()
-# g2
-# 
-# g3 = ggplot(age3percentlong, aes(x=week, y=length_avg, color=year, group=year)) +
-#   geom_line() +
-#   labs(x="Week", y="% of final length") +
-#   theme_bw()
-# g3
 
 #all data
-Age2meanLengths_all = meanlengthatagealldata[[1]] #Catch data starts in 1963
-Age2meanLengths_all = Age2meanLengths_all[6:nrow(Age2meanLengths_all),] 
+#Extract age 2 length at age data
+Age2meanLengths_all = meanlengthatagealldata[[1]] 
+#Catch data starts in 1963, truncate so this ASL data also starts in 1963.
+#NOTE: earlier versions of the script combined catch and escapement to obtain total returns. Current version uses reconstructed total return tables
+#This truncation at 1963 is a legacy of that earlier methodology but we end up using data only back to 1979 anyway later in the script to the regime shift). 
+#This section is still important to ensure all dataframes and vectors start in the correct year
+Age2meanLengths_all = Age2meanLengths_all[6:nrow(Age2meanLengths_all),] #Truncate at 1963
 
+#Extract age 2 sample sizes
 Age2meanLengths_all_sample_size = meanlengthatagealldata[[3]]
 Age2meanLengths_all_sample_size = Age2meanLengths_all_sample_size[6:nrow(Age2meanLengths_all_sample_size),] 
 
+#Extract age 3 length at age
 Age3meanLengths_all = meanlengthatagealldata[[2]]
-Age3meanLengths_all = Age3meanLengths_all[6:nrow(Age3meanLengths_all),]
 
+#Catch data starts in 1963, truncate so this ASL data also starts in 1963
+
+#NOTE: earlier versions of the script combined catch and escapement to obtain total returns. Current version uses reconstructed total return tables
+#This truncation at 1963 is a legacy of that earlier methodology but we end up using data only back to 1979 anyway later in the script to the regime shift). 
+#This section is still important to ensure all dataframes and vectors start in the correct year
+
+Age3meanLengths_all = Age3meanLengths_all[6:nrow(Age3meanLengths_all),] #Truncate at 1963
+
+#Extract age 3 sample sizes
 Age3meanLengths_all_sample_size = meanlengthatagealldata[[4]]
 Age3meanLengths_all_sample_size = Age3meanLengths_all_sample_size[6:nrow(Age3meanLengths_all_sample_size),] 
 
@@ -328,52 +223,13 @@ max(Age2meanLengths_all[,1],na.rm = TRUE)
 min(Age3meanLengths_all[,1],na.rm = TRUE)
 max(Age3meanLengths_all[,1],na.rm = TRUE)
 
+#Section 04.
+#Purpose: Calcluates total returns and truncates model variabes to correct timeframe
+#time frame is either 1980 to 2023 or 1979 to 2022 for lagged variables
 
 
-# river 
-catchAllRivers = as.vector(rowSums(data1[,2:9]))
 
-#2021 catch was 40,227,985
-
-
-catchAllRivers = c(catchAllRivers,40227985)
-
-escapementAllRivers = as.vector(rowSums(data2[,2:9]))
-
-#2021 escapement was 25,632,012
-
-escapementAllRivers = c(escapementAllRivers,25632012)
-
-#getting full escapement project type dataframe
-# Age2meanLengths_escapement$catch <- catchAllRivers
-# Age3meanLengths_escapement$catch <- catchAllRivers
-# 
-# Age2meanLengths_escapement$escapement <- escapementAllRivers
-# Age3meanLengths_escapement$escapement <- escapementAllRivers
-# 
-# #getting full catch project type dataframe
-# 
-# Age2meanLengths_catch$catch <- catchAllRivers
-# Age3meanLengths_catch$catch <- catchAllRivers
-# 
-# Age2meanLengths_catch$escapement <- escapementAllRivers
-# Age3meanLengths_catch$escapement <- escapementAllRivers
-
-#getting full all project types dataframe
-
-#Age2meanLengths_all$catch <- catchAllRivers
-#Age3meanLengths_all$catch <- catchAllRivers
-
-#Age2meanLengths_all$escapement <- escapementAllRivers
-#Age3meanLengths_all$escapement <- escapementAllRivers
-
-#For Port Moller
-
-#Age2meanLengths_portmoller$catch <- catchAllRivers[2:59] #pm data goes from 1964 rather than 1963
-#Age3meanLengths_portmoller$catch <- catchAllRivers[2:59]
-
-#Age2meanLengths_portmoller$escapement <- escapementAllRivers[2:59]
-#Age3meanLengths_portmoller$escapement <- escapementAllRivers[2:59]
+#Calculate total return sizes for each year from 1963 to 2021
 
 years = seq(from = 1963, to = 2021, by = 1)
 Total_Run_Original = c()
@@ -382,137 +238,28 @@ for(i in 1:length(years))
   Total_Run_Original[i] = sum(Totals[which(Totals[,"retYr"] == years[i]),"return"])
 }
 
-
 Total_Run_Original = c(Total_Run_Original,83281.914, 54485.107 ) # add 2022 estimate 80000, add 2023 estimate #2023 Bristol Bay total run 54,485,107
 Total_Run = Total_Run_Original
-Total_Run_For_Portmoller = Total_Run[2:60]
 
 
-#Catch
-library(ggplot2)
-
-#Just start with catch because catch is done by district but escapement is done by river
-#But when aggregating the above doesn't matter
-
-#Aggregating catch, escapement, and test fishery
-
-#Age2
-
-library(tidyr)
-
-
-
-#Leave one out
-SizeAtAge2 = data_all[which(data_all[,'Salt.Water.Age'] == 2 & data_all[,'Year'] >= 1963 ),]
-#No 2006 age 2 length at age
-SizeAtAge3 = data_all[which(data_all[,'Salt.Water.Age'] == 3 & data_all[,'Year'] >= 1963),]
-
-
-#Port Moller
-
-
-SizeAtAge2portmoller = data_test_fishery_full[which(data_test_fishery_full[,'Salt.Water.Age'] == 2 & data_test_fishery_full[,'Year'] >= 1964 ),]
-
-SizeAtAge3portmoller = data_test_fishery_full[which(data_test_fishery_full[,'Salt.Water.Age'] == 3 & data_test_fishery_full[,'Year'] >= 1964),]
-
-#
-
-years = seq(from = 1980, to = 2023)
-
-
-MeanSizeAtAge2 = c()
-
-
-MeanSizeAtAge3 = c() 
-
-
-MeanSizeAtAge2_June_24 = c()
-
-
-MeanSizeAtAge3_June_24 = c() 
-
-
-
-for(i in 1:length(years))
-{
-  MeanSizeAtAge2[i] = mean(SizeAtAge2[which(SizeAtAge2[,'Year'] == years[i]),'Length'])
-
-  MeanSizeAtAge3[i] = mean(SizeAtAge3[which(SizeAtAge3[,'Year'] == years[i]),'Length'])
-
- # MeanSizeAtAge2_June_24[i] = mean(SizeAtAge2[which(SizeAtAge2[,'Year'] == years[i] & format(as.Date(SizeAtAge2[,'sampleDate']), "%j") <= 176 ),'Length'], na.rm = TRUE)
-
-
- # MeanSizeAtAge3_June_24[i] = mean(SizeAtAge3[which(SizeAtAge3[,'Year'] == years[i] & format(as.Date(SizeAtAge3[,'sampleDate']), "%j") <= 176 ),'Length'], na.rm = TRUE)
-
-  # row.names(MeanSizeAtAge2) = years
-  # row.names(MeanSizeAtAge3) = years
-
-
-}
-
-
-yearsvector = c("1963 to 2009",
-                "1963 to 2010",
-                "1963 to 2011",
-                "1963 to 2012",
-                "1963 to 2013",
-                "1963 to 2014",
-                "1963 to 2015",
-                "1963 to 2016",
-                "1963 to 2017",
-                "1963 to 2018",
-                "1963 to 2019",
-                "1963 to 2020",
-                "1963 to 2021",
-                "1963 to 2022")
-
-
-par(mfrow=c(2,2))
-
-
-years[17]
-years[60]
-
-years[32]
-
-#If want to add previous years sockeye abundance as covariate, need to truncate main dataset to 1964 so can use 1963 sockeye abundance
-
-Total_Run_Previous_Year_1979to2021 = Total_Run_Original[17:59]
+#Truncate total returns to relevant start and end year (1979 to 2022) since this is autoregressive dataset
 
 Total_Run_Previous_Year_1979to2022 = Total_Run_Original[17:60]
 
-Total_Run_Previous_Year_1994to2021 = Total_Run_Original[32:59]
+#Truncate total returns to relevant start and end year (1980 to 2023) since this is the response variable (NOT autoregressive term)
 
-
-#Truncate Total Run
-years[33]
-years[48]
-
-
-Total_Run_1980_2022 = Total_Run_Original[18:60] #1980 to 2022
-Total_Run_1995_2022 = Total_Run_Original[33:60] #1995 to 2022
-
-Total_Run_2010_2022 = Total_Run_Original[48:60] #2010 to 2022
-Total_Run_2005_2022 = Total_Run_Original[43:60] #2005 to 2022
-Total_Run_2000_2022 = Total_Run_Original[38:60] #2000 to 2022
-
-
+#Tested a few different test periods so that is what these different timeframes are for
 Total_Run_2010_2023 = Total_Run_Original[48:61] #2010 to 2023
 Total_Run_2005_2023 = Total_Run_Original[43:61] #2005 to 2023
 Total_Run_2000_2023 = Total_Run_Original[38:61] #2000 to 2023
 Total_Run_1980_2023 = Total_Run_Original[18:61] #1980 to 2023
 
-#Truncate data frame so its 1980 to 2022
-
-Age2meanLengths_all_1980_2022 = Age2meanLengths_all[18:60,]
-Age3meanLengths_all_1980_2022 = Age3meanLengths_all[18:60,]
+#Truncate age-length dataframes so they also start in 1980 and end in 2023
 
 Age2meanLengths_all_1980_2023 = Age2meanLengths_all[18:61,]
 Age3meanLengths_all_1980_2023 = Age3meanLengths_all[18:61,]
 
-Age2meanLengths_all_1995_2022 = Age2meanLengths_all[33:60,]
-Age3meanLengths_all_1995_2022 = Age3meanLengths_all[33:60,]
-
+#Identify odd or even year for model term
 par(mfrow=c(1,2))
 
 Odd_Even_Year = c()
@@ -537,19 +284,15 @@ for(i in 1:length(years_1980_2023))
 }
 
 
-nrow(Age2meanLengths_all_1980_2023)
-
-Age2meanLengths_all_1980_2023[1,]
-print((Age2meanLengths_all_1980_2023[30,]))
 
 library(pls)
 set.seed(2)
 
-#Scale numeric covariates to mean of 0, standard deviation of 1
-
+#Add row and column names to dataframe
 row_names = rownames(Age2meanLengths_all_1980_2023)
 col_names = colnames(Age2meanLengths_all_1980_2023)
   
+#Make scaled version of DF to try the effect of scaled variables
 Age2meanLengths_all_1980_2023_scaled = t(apply(Age2meanLengths_all_1980_2023,1, scale))
 Age3meanLengths_all_1980_2023_scaled = t(apply(Age3meanLengths_all_1980_2023,1, scale))
 
@@ -561,7 +304,9 @@ colnames(Age3meanLengths_all_1980_2023_scaled) = col_names
 
 nrow(Age2meanLengths_all_1980_2023)
 
-#Total_Run_Previous_Year_1979to2022 = log(Total_Run_Previous_Year_1979to2022)
+#Section 05. 
+#Purpose: Run the models for age 2 and age 3
+#one_step_ahead_regression() is a function from helper script 'scripts/salmon_regression_models_V5_08_03_2023_cyclic_pink_salmon_2.R'
 
 ModelPredictionsAge2 = one_step_ahead_regression(meanLengths= Age2meanLengths_all_1980_2023,age="Age 2", day = 176,  
                                                  Total_Run = Total_Run_1980_2023,
@@ -580,9 +325,14 @@ ModelPredictionsAge3 = one_step_ahead_regression(meanLengths=Age3meanLengths_all
                                                  PreviousWinterMeanTemp=WinterMeanTemp1979to2023,startyear=1980,endyear=2023,start_test_year = 2000)
 
 
-Age_2_Sum_Sq_DF_Model_7 = array(dim = c(24,3)) #4 variables
-Age_2_R2_Model_7 = c()
+#Calculate R squared for the best models for each age 
+#For age 2 the best model was model 3
+  #for age 2 model 5 was almost equivalent
+#For age 3 the best model was model 5
+  #For age 3 model 3 was almost equivalent.
 
+Age_2_Sum_Sq_DF_Model_3 = array(dim = c(24,3)) #3 variables
+Age_2_R2_Model_3 = c()
 
 Age_3_Sum_Sq_DF_Model_5 = array(dim = c(24,4)) #4 variables
 Age_3_R2_Model_5 = c()
@@ -592,8 +342,8 @@ Age_3_R2_Model_5 = c()
 for(i in 1:24)
 {
 
- Age_2_R2_Model_7[i] = ModelPredictionsAge2[["ANOVA"]][[13]][[i]][["adj.r.squared"]]
- Age_2_Sum_Sq_DF_Model_7[i,] = ModelPredictionsAge2[["ANOVA"]][[14]][[i]][["Sum Sq"]][1:3] #3 variables
+ Age_2_R2_Model_3[i] = ModelPredictionsAge2[["ANOVA"]][[5]][[i]][["adj.r.squared"]]
+ Age_2_Sum_Sq_DF_Model_3[i,] = ModelPredictionsAge2[["ANOVA"]][[6]][[i]][["Sum Sq"]][1:3] #3 variables
  
  Age_3_R2_Model_5[i] = ModelPredictionsAge3[["ANOVA"]][[9]][[i]][["adj.r.squared"]]
  Age_3_Sum_Sq_DF_Model_5[i,] = ModelPredictionsAge3[["ANOVA"]][[10]][[i]][["Sum Sq"]][1:4] #4 variables
@@ -601,97 +351,52 @@ for(i in 1:24)
 }
 
 
-mean_Age_2_R2_Model_7 = mean(Age_2_R2_Model_7)
+#IMPORTANT; ERROR IN RESULTS SECTION OF MANUSCRIPT
+#CURRENTLY LISTS BEST AGE 2 MODEL AS INCLUDING SIZE AT AGE, RUN SIZE IN PREVIOUS YEAR, PREVIOUS SUMMERS SST, AND PREVIOUS PINK ABUNDANCE
+#HOWEVER: MODEL 3 IS ONLY LENGTH AT AGE, RUN SIZE IN T-1, AND PINK SALMON ABUNDANCE IN T-1
+#Fix this after Curry makes his comments/revisions
+
+mean_Age_2_R2_Model_3 = mean(Age_2_R2_Model_3)
 mean_Age_3_R2_Model_5 = mean(Age_3_R2_Model_5)
 
-Age2_percent_explained = colMeans(Age_2_Sum_Sq_DF_Model_7/rowSums(Age_2_Sum_Sq_DF_Model_7))
+Age2_percent_explained = colMeans(Age_2_Sum_Sq_DF_Model_3/rowSums(Age_2_Sum_Sq_DF_Model_3))
 Age3_percent_explained = colMeans(Age_3_Sum_Sq_DF_Model_5/rowSums(Age_3_Sum_Sq_DF_Model_5))
 
 retrospective_and_onestep_ahead_age2= ModelPredictionsAge2[[1]]
 retrospective_and_onestep_ahead_age3= ModelPredictionsAge3[[1]]
-
-
-#source('scripts/meanrelativeerrorcode_model_5.R')
-
 
 par(mfrow=c(1,1))
 
 
 years = row.names(Age2meanLengths_all_1980_2023)
 
-regressions2 = array(0, dim = c(length(years),4))  
-regressions3 = array(0, dim = c(length(years),4))  
+
+#Section 05.
+#Calculate mean size at age for each ocean age class (ocean age 2 and ocean age 3)
+#Calculate mean (across years) difference between mean (within season) size at age up through each day of season vs end of season mean size at age
+
+SizeAtAge2 = data_all[which(data_all[,'Salt.Water.Age'] == 2 & data_all[,'Year'] >= 1963 ),]
+#No 2006 age 2 length at age
+SizeAtAge3 = data_all[which(data_all[,'Salt.Water.Age'] == 3 & data_all[,'Year'] >= 1963),]
+
+#This vector and the ensuing size at age dataset is years 1980 to 2023
+years = seq(from = 1980, to = 2023)
+
+MeanSizeAtAge2 = c()
+MeanSizeAtAge3 = c() 
+MeanSizeAtAge2_June_24 = c()
+MeanSizeAtAge3_June_24 = c() 
+
 
 for(i in 1:length(years))
 {
-  t2 = lm(Total_Run_1980_2023[-i]~MeanSizeAtAge2[-i]+Total_Run_Previous_Year_1979to2022[-i]+SummerMeanTemp1979to2022[-i])
-  regressions2[i,] = t2[["coefficients"]] # regression between everything except year i
+  #Extract average size at age in each year. This gives the full end of year size at age
+  MeanSizeAtAge2[i] = mean(SizeAtAge2[which(SizeAtAge2[,'Year'] == years[i]),'Length'])
   
-  t3 = lm(Total_Run_1980_2023[-i]~MeanSizeAtAge3[-i]+Total_Run_Previous_Year_1979to2022[-i]+SummerMeanTemp1979to2022[-i])
-  regressions3[i,] = t3[["coefficients"]] # regression between everything except year i
+  MeanSizeAtAge3[i] = mean(SizeAtAge3[which(SizeAtAge3[,'Year'] == years[i]),'Length'])
   
 }
 
-row.names(regressions2) = years
-row.names(regressions3) = years
-
-errors2 = data.frame(array(0, dim = c(length(years),90)))
-errors3 = data.frame(array(0, dim = c(length(years),90)))
-
-row.names(errors2) = years
-names(errors2)<- paste0("day",seq(90))
-
-row.names(errors3) = years
-names(errors3)<- paste0("day",seq(90))
-
-
-
-for(i in 1:length(years))  
-{
-  for(j in 1:90)
-  {
-    estimated_run2 = regressions2[i,1] + regressions2[i,2]*Age2meanLengths_all_1980_2023[i,j] + regressions2[i,3]*Total_Run_Previous_Year_1979to2022[i] + regressions2[i, 4]*SummerMeanTemp1979to2022[i]
-    errors2[i,j] = abs(Total_Run[i]-estimated_run2) #prediction error
-    #
-    estimated_run3 = regressions3[i,1] + regressions3[i,2]*Age3meanLengths_all_1980_2023[i,j] + regressions3[i,3]*Total_Run_Previous_Year_1979to2022[i] + regressions3[i, 4]*SummerMeanTemp1979to2022[i]
-    errors3[i,j] = abs(Total_Run[i]-estimated_run3)
-
-    # #errors[i,j]<-abs((Total_Run[i]-estimated_run)/Total_Run[i]) #mean relative error
-  }
-}
-
-# t = lm(Total_Run_1980_2022~MeanSizeAtAge2+Total_Run_Previous_Year_1979to2022[1:43]+SummerMeanTemp1979to2022[1:43])
-# 
-# regressions[i,] = t[["coefficients"]] # regression between everything except year i
-
-
-mean_err_by_week_age2<-apply(errors2,2,function(x) mean(x,na.rm=T))
-mean_err_by_week_age3<-apply(errors3,2,function(x) mean(x,na.rm=T))
-
-
-dates = seq(as.Date(format = "%m/%d", "06/13"), by = "day", length.out = 90)
-dates_extended = c(dates,dates)
-
-
-prediction_over_time_df = data.frame(c(mean_err_by_week_age2,mean_err_by_week_age3))
-prediction_over_time_df = cbind(prediction_over_time_df,c(rep("Age 2",90), rep("Age 3", 90)) )
-prediction_over_time_df[,"Dates"] = dates_extended
-
-
-colnames(prediction_over_time_df) = c("Error", "Age","Date")
-prediction_over_time_df2 = prediction_over_time_df[which(prediction_over_time_df[,"Date"] <= "2024-08-01"),]
-
-ggplot(data = prediction_over_time_df2, aes(x = Date, y = Error)) +
-  geom_point()+
-  labs(x="Date", y="Error (in thousands)") +
-  facet_wrap(~Age, scales = "free", ncol=2)+
-  theme_classic()+
-  theme(axis.text.x = element_text(size = 12),
-        axis.title.x = element_text(size = 13),
-        axis.text.y = element_text(size = 12),
-        axis.title.y = element_text(size = 13),
-        strip.text.x = element_text(size = 15),
-        panel.spacing = unit(2, "lines"))
 
 mean_abs_percent_error_age_2 = array(dim = c(nrow = nrow(Age2meanLengths_all_1980_2023), ncol = ncol(Age2meanLengths_all_1980_2023)))
 rownames(mean_abs_percent_error_age_2) = rownames(Age2meanLengths_all_1980_2023)
@@ -733,6 +438,13 @@ average_error_df[,"Date"] = dates_extended
 colnames(average_error_df) = c("Age", "Error", "Date")
 
 
+#Section 06.
+#Purpose: Graphing average error in mean length at age through each day of the season vs end of season mean length at age
+#This section of the script primarily delves into data output, primarily graphs
+
+#Graph average error in length on each day of the season 
+
+#Graphs both ages faceted
 Mean_Percent_Difference_Length_Plot <- ggplot(data = average_error_df, aes(x = Date, y = Error)) +
   geom_line()+
   labs(x="Date", y="Mean Absolute % Difference") +
@@ -751,6 +463,7 @@ Mean_Percent_Difference_Length_Plot <- ggplot(data = average_error_df, aes(x = D
 Mean_Percent_Difference_Length_Plot
 
 
+#Graphs just age 2
 
 Mean_Percent_Difference_Length_Plot_age_2 <- ggplot(data = average_error_df[which(average_error_df[,"Age"] == "Ocean age-2"),], aes(x = Date, y = Error)) +
   geom_line()+
@@ -767,6 +480,8 @@ Mean_Percent_Difference_Length_Plot_age_2 <- ggplot(data = average_error_df[whic
         panel.spacing = unit(2, "lines"),
         strip.background = element_rect(color="white", fill="white", linetype="solid"))
 
+#Graphs just age 3
+
 Mean_Percent_Difference_Length_Plot_age_3 <- ggplot(data = average_error_df[which(average_error_df[,"Age"] == "Ocean age-3"),], aes(x = Date, y = Error)) +
   geom_line()+
   labs(x="Date", y="") +
@@ -782,32 +497,12 @@ Mean_Percent_Difference_Length_Plot_age_3 <- ggplot(data = average_error_df[whic
         strip.background = element_rect(color="white", fill="white", linetype="solid"))
 
 
-# 
-# 
-# cor1 = cor(y = Total_Run_1980_2022, x = MeanSizeAtAge2_June_24)
-# cor2 = cor(y = Total_Run_1980_2022, x = MeanSizeAtAge3_June_24)
-# cor3 = cor(y = Total_Run_1980_2022, x = MeanSizeAtAge2)
-# cor4 = cor(y = Total_Run_1980_2022, x = MeanSizeAtAge3)
+#Graph Size at age vs run size
 
 Mean_Length = c(MeanSizeAtAge2_June_24, MeanSizeAtAge3_June_24, MeanSizeAtAge2, MeanSizeAtAge3)
 Run = c(Total_Run_1980_2023,Total_Run_1980_2023,Total_Run_1980_2023,Total_Run_1980_2023)
 Time = c(rep("A",length(Total_Run_1980_2023)), rep("A", length(Total_Run_1980_2023)),rep("B",length(Total_Run_1980_2023)), rep("B", length(Total_Run_1980_2023)))
 Age = c(rep("Age 2",length(Total_Run_1980_2023)), rep("Age 3",length(Total_Run_1980_2023)), rep("Age 2",length(Total_Run_1980_2023)), rep("Age 3",length(Total_Run_1980_2023)))
-
-#A is age june 24, B is end of season
-
-
-# Age_vs_Run_df2 = data.frame(cbind(Mean_Length, Run))
-# Age_vs_Run_df2[,"Time"] = Time
-# Age_vs_Run_df2[,"Run"] = Age_vs_Run_df2[,"Run"]/1000
-# Age_vs_Run_df2[,"Age"] = Age 
-# 
-#  ggplot(data = Age_vs_Run_df2, aes(x = Mean_Length, y = Run, color = Age)) +
-#   geom_point()+
-#   labs(x="Body Length (mm)", y="Run Size (in millions)") +
-#   facet_wrap(~Time, scales = "free", ncol=1)+
-#   scale_y_continuous(name = "Observed Run (in millions)", breaks = c(15, 25, 35, 45, 55, 65, 75,85), limits = c(15, 85))+
-#   scale_x_continuous(name = "Body Length (mm)", breaks = seq(470,600,20), limits = c(470, 600))+
 
 Mean_Length = c(MeanSizeAtAge2, MeanSizeAtAge3)
 Run = c(Total_Run_1980_2023,Total_Run_1980_2023)
@@ -818,6 +513,8 @@ Age = c(rep("Ocean age-2",length(Total_Run_1980_2023)), rep("Ocean age-3", lengt
 Age_vs_Run_df2 = data.frame(cbind(Mean_Length, Run))
 Age_vs_Run_df2[,"Age"] = Age
 Age_vs_Run_df2[,"Run"] = Age_vs_Run_df2[,"Run"]/1000
+
+#Graph size at age vs run size for both ages
 
  Length_vs_Run_Plot = ggplot(data = Age_vs_Run_df2, aes(x = Mean_Length, y = Run)) +
   geom_point()+
@@ -838,6 +535,8 @@ Age_vs_Run_df2[,"Run"] = Age_vs_Run_df2[,"Run"]/1000
         panel.spacing = unit(1, "lines"),
         strip.background = element_rect(color="white", fill="white", linetype="solid"))
 
+ #Graph size at age vs run size for age 2
+ 
  Length_vs_Run_Plot_age_2 = ggplot(data = Age_vs_Run_df2[which(Age_vs_Run_df2[,"Age"] == "Ocean age-2"),], aes(x = Mean_Length, y = Run)) +
    geom_point()+
    labs(x="Body Length (mm)", y="Run Size (in millions)") +
@@ -856,6 +555,8 @@ Age_vs_Run_df2[,"Run"] = Age_vs_Run_df2[,"Run"]/1000
      strip.text.x = element_text(size = 15, hjust = 0),
     
      strip.background = element_rect(color="white", fill="white", linetype="solid"))
+ 
+ #Graph size at age vs run size for age 3
  
  Length_vs_Run_Plot_age_3 = ggplot(data = Age_vs_Run_df2[which(Age_vs_Run_df2[,"Age"] == "Ocean age-3"),], aes(x = Mean_Length, y = Run)) +
    geom_point()+
@@ -877,129 +578,9 @@ Age_vs_Run_df2[,"Run"] = Age_vs_Run_df2[,"Run"]/1000
      strip.background = element_rect(color="white", fill="white", linetype="solid"))
  
  
- 
-
-par(mfrow=c(1,1))
-
-#meanrelativeerror_model_5
-
-
-# 
-# colnames(retrospective_and_onestep_ahead_age2) = row.names(Age2meanLengths_all_1980_2022)[-which()]
-# colnames(retrospective_and_onestep_ahead_age3) = seq(from = 1980, to = 2022)
-# 
-
-length(seq(from = 1995, to = 2022))
-length(seq(from = 1980, to = 1994))
-
-length(seq(from = 2010, to = 2022))
-length(seq(from = 1980, to = 2009))
-
-fit_age_2 = c()
-fit_age_3 = c()
-years_for_df = c()
-Observed_Run_Vector = c()
-for(i in 1:(ncol(retrospective_and_onestep_ahead_age2)))
-{
-  fit_age_2 = c(fit_age_2,retrospective_and_onestep_ahead_age2[,i])
-  fit_age_3 = c(fit_age_3,retrospective_and_onestep_ahead_age3[,i])
-  
-  years_for_df = c(years_for_df,rep(colnames(retrospective_and_onestep_ahead_age2)[i], 13))
-  Observed_Run_Vector = c(Observed_Run_Vector,rep(Total_Run_1980_2023[i], 13))
-  }
-
-fit_age_2 = as.numeric(fit_age_2)
-fit_age_3 = as.numeric(fit_age_3)
-
-years_for_df = as.numeric(years_for_df)
-
-age2_vector = as.factor(rep("Ocean age-2",ncol(retrospective_and_onestep_ahead_age2)))
-age3_vector = as.factor(rep("Ocean age-3",ncol(retrospective_and_onestep_ahead_age2)))
-#Age 2 is A, Age 3 is B
-Type = as.factor(c((rep("Retrospective",(ncol(retrospective_and_onestep_ahead_age2)-24)*13)),(rep("Prospective",24*13))))
-
-Model_Vector = as.factor(rep(c("Model 1","Model 2","Model 3","Model 4","Model 5","Model 6","Model 7", "Model 8", "Model 9", "Model 10", "Model 11", "Model 12", "Model 13"), ncol(retrospective_and_onestep_ahead_age2)))
-
-retrospective_and_onestep_ahead_age2_long = cbind.data.frame(Model_Vector, years_for_df, fit_age_2,age2_vector,Type,Observed_Run_Vector)
-retrospective_and_onestep_ahead_age3_long = cbind.data.frame(Model_Vector, years_for_df, fit_age_3,age3_vector, Type,Observed_Run_Vector)
-
-colnames(retrospective_and_onestep_ahead_age2_long) = c("Model","Year","Fit","Age","Type","Observed_Run")
-colnames(retrospective_and_onestep_ahead_age3_long) = c("Model","Year","Fit","Age","Type","Observed_Run")
-
-full_onestep_ahead_and_prospective_df = rbind(retrospective_and_onestep_ahead_age2_long,retrospective_and_onestep_ahead_age3_long)
-
-full_onestep_ahead_and_prospective_df_model_3 = full_onestep_ahead_and_prospective_df[which(full_onestep_ahead_and_prospective_df[,"Model"] == "Model 3"),]
-full_onestep_ahead_and_prospective_df_model_7 = full_onestep_ahead_and_prospective_df[which(full_onestep_ahead_and_prospective_df[,"Model"] == "Model 7"),]
-full_onestep_ahead_and_prospective_df_model_5 = full_onestep_ahead_and_prospective_df[which(full_onestep_ahead_and_prospective_df[,"Model"] == "Model 5"),]
-
-
-
-
-#Model 7 = best on average, model 2 = best in 2022
-full_onestep_ahead_and_prospective_df_Models_7_2 = full_onestep_ahead_and_prospective_df[which(full_onestep_ahead_and_prospective_df[,"Model"] == "Model 7" | full_onestep_ahead_and_prospective_df[,"Model"] == "Model 2"),]
-
-full_onestep_ahead_and_prospective_df_Models_7_2[,"Fit"] = full_onestep_ahead_and_prospective_df_Models_7_2[,"Fit"]/1000
-full_onestep_ahead_and_prospective_df_Models_7_2[,"Observed_Run"] = full_onestep_ahead_and_prospective_df_Models_7_2[,"Observed_Run"]/1000
-
-full_onestep_ahead_and_prospective_df_Models_5_2 = full_onestep_ahead_and_prospective_df[which(full_onestep_ahead_and_prospective_df[,"Model"] == "Model 5" | full_onestep_ahead_and_prospective_df[,"Model"] == "Model 2"),]
-
-full_onestep_ahead_and_prospective_df_Models_5_2[,"Fit"] = full_onestep_ahead_and_prospective_df_Models_5_2[,"Fit"]/1000
-full_onestep_ahead_and_prospective_df_Models_5_2[,"Observed_Run"] = full_onestep_ahead_and_prospective_df_Models_5_2[,"Observed_Run"]/1000
-
-
-full_onestep_ahead_and_prospective_df_Models_7_2_age_2 = full_onestep_ahead_and_prospective_df_Models_7_2[which(full_onestep_ahead_and_prospective_df_Models_7_2[,"Age"] == "Ocean age-2"),]
-full_onestep_ahead_and_prospective_df_Models_5_2_age_3 = full_onestep_ahead_and_prospective_df_Models_5_2[which(full_onestep_ahead_and_prospective_df_Models_7_2[,"Age"] == "Ocean age-3"),]
-  
-Forecasting_Plot_age_2 = ggplot(data = full_onestep_ahead_and_prospective_df_Models_7_2_age_2, aes(x = Year, y = Fit, color = Model)) +
-  geom_line() +
-  geom_point(data = full_onestep_ahead_and_prospective_df_Models_7_2_age_2, aes(x = Year, y = Observed_Run), color = "black")+
-  labs(x="Year", y="Observed (in millions)") +
-  geom_vline(xintercept = 2000, color = "black")+
-  scale_color_manual(values = c("black","blue"))+
-  #scale_linetype_manual(values=c("solid","twodash", "dotted"))+
-  scale_y_continuous(name = "Observed Run (millions)", breaks = c(15, 25, 35, 45, 55, 65, 75,85), limits = c(15, 85))+
-  theme_classic()+
-  
-  theme(plot.margin = margin(0,.5,.25,1, unit = "cm"),
-        axis.text.x = element_text(size = 12),
-        axis.title.x = element_text(size = 13),
-        axis.text.y = element_text(size = 12),
-        axis.title.y = element_text(size = 13),
-        strip.text.x = element_text(size = 13, hjust = 0),
-        
-        legend.direction="vertical",
-        legend.text = element_text(size = 11),
-        legend.title = element_blank(),
-        
-        legend.position = "none", #Model 2 is red, Model 7 is blue
-        
-        strip.background = element_rect(color="white", fill="white", linetype="solid"))
-
-Forecasting_Plot_age_3 = ggplot(data = full_onestep_ahead_and_prospective_df_Models_5_2_age_3, aes(x = Year, y = Fit, color = Model)) +
-  geom_line() +
-  geom_point(data = full_onestep_ahead_and_prospective_df_Models_5_2_age_3, aes(x = Year, y = Observed_Run), color = "black")+
-  labs(x="Year", y="") +
-  geom_vline(xintercept = 2000, color = "black")+
-  #scale_linetype_manual(values=c("solid","twodash", "dotted"))+
-  scale_color_manual(values = c("black","red"))+
-  scale_y_continuous(name = "", breaks = c(15, 25, 35, 45, 55, 65, 75,85), limits = c(15, 85))+
-  theme_classic()+
-  
-  theme(plot.margin = margin(0,.5,.25,1, unit = "cm"),
-        axis.text.x = element_text(size = 12),
-        axis.title.x = element_text(size = 13),
-        axis.text.y = element_text(size = 12),
-        axis.title.y = element_text(size = 13),
-        strip.text.x = element_text(size = 13, hjust = 0),
-       
-        legend.direction="vertical",
-        legend.text = element_text(size = 11),
-        legend.title = element_blank(),
-        #legend.position= c(1.1, 0.5),
-        legend.position = "none",
-        
-        strip.background = element_rect(color="white", fill="white", linetype="solid"))
-
+#Section 07.
+#This section generates the weighted model predictions.
+#Methodology further described below
   
 one_step_ahead_ModelPredictions_Age2 = ModelPredictionsAge2[[2]]
 one_step_ahead_ModelPredictions_Age3 = ModelPredictionsAge3[[2]]
@@ -1014,32 +595,10 @@ colnames(one_step_ahead_ModelPredictions_All_Ages) = c("Model 1 Age 2", "Model 2
 
 
 
-model_predictions_No_Duplicates = one_step_ahead_ModelPredictions_All_Ages[,1:23] #drop last 3 model with just environmental covariates
+model_predictions_No_Duplicates = one_step_ahead_ModelPredictions_All_Ages[,1:23] #drop last 3 model with just environmental covariates (these are duplicates)
 
-#Standard error is standard deviation /sqrt(n)
+#Wrangle pre-season data format, ensure the year ranges are correcft
 
-#The below commented out section seems irrelevant/wrong (maybe it was an old test section?)
-# df = model_predictions_No_Duplicates[1:10,] #extract 2014 (10)
-# se = SD_Error(df, Total_Run_2005_2022[1:10])/sqrt(length(Total_Run_2005_2022[1:10]))
-# mape = c()
-#   
-#   for(i in 1:ncol(df))
-#   {
-#   mape[i] = mean(abs(df[,i]-Total_Run_2005_2022[1:10])/Total_Run_2005_2022[1:10])
-#   }
-# 
-# mape #Manually  counting, top models are... 7,1,2,13,5
-# #manually get variances of top 5
-# top_se = se[c(7,1,2,13,5)]
-# inv_var = 1/(top_se^2)
-# wt = inv_var/(sum(inv_var))
-# sum(wt)
-# 
-# wt_prediction = model_predictions_No_Duplicates[11,c(c(7,1,2,13,5))]*wt #prediction year 2015 (11), extract top 5 models
-# sum(wt_prediction)
-
-#preseason_forecasts = c(39.8,35.8,31.7,28.2,29.9,49.5,51.0,43.1,47.6,44.6,49.8,50.9,71.9) #FRI 2010-2022
-preseason = read.csv("data/Preseason.csv")
 preseason_FRI = preseason[which(preseason[,"agency"] == 1),]
 FRI_Preseason_Total_Forecast_1993_2023 = c()
 
@@ -1055,7 +614,17 @@ FRI_Preseason_Total_Forecast_2005_2023 = FRI_Preseason_Total_Forecast_1993_2023[
 FRI_Preseason_Total_Forecast_2010_2023 = FRI_Preseason_Total_Forecast_1993_2023[18:31]
 unique(preseason_FRI[,"retYr"])[13]
 
-#Weighted model
+#Weighted model code
+
+
+#Step 1. Fit Inseason models to data through 1999 
+#Step 2. Use within sample predictions to calculate variance for each of the inseason models up to 1999.
+#Step 3. Record variance for each inseason model.
+#Step 4. Calculate inverse variance weighted inseason ensemble across top 5 inseason models
+#Step 5. Determine variance in predictions from observations with weighted inseason ensemble 1993-1999
+#Step 6. Calculate 1993-1999 variance for preseason forecast
+#Step 7. Weight preseason and inseason ensemble predictions to generate forecast for 2000, based on their variances 1993-1999
+#Step 8. Repeat through 2023
 
 model_standard_errors = list()
 model_standard_errors_with_preseason = list()
@@ -1067,17 +636,6 @@ n_models = 5
 
 model_predictions_No_Duplicates_with_preseason = data.frame(model_predictions_No_Duplicates)
 model_predictions_No_Duplicates_with_preseason[,"Pre-season"] = FRI_Preseason_Total_Forecast_2000_2023
-
-
-
-#Step 1. Fit Inseason models to data through 1999 
-#Step 2. Use within sample predictions to calculate variance for each of the inseason models up to 1999.
-#Step 3. Record variance for each inseason model.
-#Step 4. Calculate inverse variance weighted inseason ensemble across top 5 inseason models
-#Step 5. Determine variance in predictions from weighted inseason ensemble 1993-1999
-#Step 6. Calculate 1993-1999 variance for preseason forecast
-#Step 7. Weight preseason and inseason ensemble predictions to generate forecast for 2000, based on their variances 1993-1999
-#Step 8. Repeat through 2023
 
 
 test_start_years = seq(2000,2023,1)
@@ -1092,6 +650,7 @@ inverse_variance_from_inseason_ensemble_and_preseason = list()
 final_model_weights = list()
 weighted_out_of_sample_prediction = c()
 preseason_years = seq(1993,1999,1)
+
 #ModelPredictionsAge2
 
 step = 0
@@ -1101,7 +660,8 @@ for(i in 1:length(test_start_years))
 {  
   
   step = step+1
-  
+
+#Run models for age 2 and age 3  
 Age2 = one_step_ahead_regression(meanLengths= Age2meanLengths_all_1980_2023,age="Age 2", day = 176,  
                                                  Total_Run = Total_Run_1980_2023,
                                                  Total_Run_Previous_Year=Total_Run_Previous_Year_1979to2022,
@@ -1125,7 +685,7 @@ onestep = t(retro_and_one_step[,length(seq(1980,test_start_years[i],1))])
 retro = t(retro_and_one_step[,as.character(retro_years)]) #We need models as columns for the function to work properly
 
 #Calculate variance from within sample predictions from observed
-#length(seq(1980,1999,1))
+
 obs = Total_Run_1980_2023[1:(length(retro_years))]
 within_sample_predictions = retro 
 
@@ -1171,6 +731,8 @@ weighted_out_of_sample_prediction[step] = sum(one_step_ahead_top_5_and_preseason
 
 Weighted_Prediction_Each_Year_2000_2023 = weighted_out_of_sample_prediction 
 
+#Reformat dataframe, rescale variables
+
 predictions_2 = cbind(FRI_Preseason_Total_Forecast_2000_2023, Weighted_Prediction_Each_Year_2000_2023)
 colnames(predictions_2) = c("Preseason", "Weighted") 
 
@@ -1202,9 +764,12 @@ retrospective_1980_1999 <- retrospective_1980_1999  %>%
 
 Weighted_Prediction_Each_Year_df = rbind(Weighted_Prediction_Each_Year_df,retrospective_1980_1999)
 
+#Graph retrospective fit vs weighted model out of sample predictions
+#Also graphs observed run sizes in background
+
 Forecasting_Plot_Weighted = ggplot(data = Weighted_Prediction_Each_Year_df) +
   geom_line(aes(x = as.numeric(Year), y = Fit, linetype = Type)) +
-  geom_point(data = full_onestep_ahead_and_prospective_df_Models_5_2_age_3, aes(x = as.numeric(Year), y = Observed_Run), color = "black")+
+  geom_point(data = Weighted_Prediction_Each_Year_df, aes(x = as.numeric(Year), y = Observed_Run), color = "black")+
   labs(x="Year", y="Run Size") +
   geom_vline(xintercept = 2000, color = "red")+
   scale_linetype_manual(values=c("solid","dotted"))+
@@ -1229,6 +794,8 @@ Forecasting_Plot_Weighted = ggplot(data = Weighted_Prediction_Each_Year_df) +
 
 Forecasting_Plot_Weighted 
 
+#Graph observations vs weighted predictions to see strength of correlation
+
 Obs_vs_Pred_Plot_Weighted <- ggplot(data = Weighted_Prediction_Each_Year_df, 
                                     aes(x = Fit, y = Observed_Run)) +
   geom_point() +
@@ -1246,19 +813,22 @@ Obs_vs_Pred_Plot_Weighted <- ggplot(data = Weighted_Prediction_Each_Year_df,
   scale_y_continuous(name = "Observed (in millions)", breaks = c(15, 25, 35, 45, 55, 65, 75,85), limits = c(15, 85))+
   scale_x_continuous(name = "Predicted Run (millions)", breaks = c(15, 25, 35, 45, 55, 65, 75,85), limits = c(15, 85))
 
+#Calculate summary stats for weighted model out of sample predictions
+
 Mean_error_weighted = Mean_Absolute_Error(data.frame(Weighted_Prediction_Each_Year_2000_2023),observations=Total_Run_2000_2023)
 Max_error_weighted = Maximum_Error(data.frame(Weighted_Prediction_Each_Year_2000_2023),observations=Total_Run_2000_2023)
 sd_error_weighted = SD_Relative_Error(data.frame(Weighted_Prediction_Each_Year_2000_2023),observations=Total_Run_2000_2023)
 correlation_weighted = corelation_function(data.frame(Weighted_Prediction_Each_Year_2000_2023),observations=Total_Run_2000_2023)                                      
 Percent_error_weighted = Percent_Absolute_Error(data.frame(Weighted_Prediction_Each_Year_2000_2023),observations=Total_Run_2000_2023)
 
+#Calculate summary stats for preseason forecast
+
 Mean_Absolute_Error(data.frame(FRI_Preseason_Total_Forecast_2000_2023), observations=Total_Run_2000_2023)
 
 Maximum_Error(data.frame(FRI_Preseason_Total_Forecast_2000_2023), observations=Total_Run_2000_2023)
 
-                   
-(60594.61-54485.11)/54485.11
-  
+#Calculate summary stats for age specific models
+
 Percent_error = Percent_Absolute_Error(one_step_ahead_ModelPredictions_All_Ages,observations=Total_Run_2000_2023)
 Percent_Error_Model_7_age_2 = Percent_error[,7]
 Percent_Error_Model_5_age_3 = Percent_error[,18]
@@ -1267,14 +837,12 @@ Mean_error = Mean_Absolute_Error(one_step_ahead_ModelPredictions_All_Ages[,],obs
 
 Max_error = Maximum_Error(one_step_ahead_ModelPredictions_All_Ages,observations=Total_Run_2000_2023)
 
-#Max errors all occur in 2013
-#Mean_error = c(Mean_error,NA)
-
-
 sd_error = SD_Relative_Error(one_step_ahead_ModelPredictions_All_Ages,observations=Total_Run_2000_2023)
 
 
 correlations = corelation_function(one_step_ahead_ModelPredictions_All_Ages, observations=Total_Run_2000_2023) 
+
+#Combine summary statistics into table
 
 Results_Table = t(rbind(c(Mean_error, Mean_error_weighted), c(Max_error, Max_error_weighted), c(sd_error, sd_error_weighted), c(correlations, correlation_weighted)))
 
@@ -1287,8 +855,11 @@ Updated_Results_Table = as.matrix(Updated_Results_Table)
 
 colnames(Updated_Results_Table) = c("Mean Error","Max Error", "SD Error", "Correlation", "Age", "Model")
 
+#Output summary statistic table
+
 write.csv(Updated_Results_Table,"data/results_table_06_24.csv" )
 
+#Graph model inseason predictions versus pre-season prediction
 
 Preaseason_vs_Models_df = data.frame(c(Total_Run_2000_2023/1000, FRI_Preseason_Total_Forecast_2000_2023/1000, Weighted_Prediction_Each_Year_2000_2023/1000 ))
 Preaseason_vs_Models_df[,"Category"] = c(rep("Observed", length(Total_Run_2000_2023)), rep("Pre-season", length(Total_Run_2000_2023)), rep("Weighted", length(Total_Run_2000_2023)))
@@ -1325,9 +896,8 @@ Inseason_vs_Preseason_Plot = ggplot()+
 
 MAPE_preseason = mean(abs(1-(FRI_Preseason_Total_Forecast_2000_2023/(Total_Run_2000_2023))))
 
-
-library(ggpubr)
-library(tidyverse)
+#Graph scatter plots of preseason predictions versus in-season ensemble forecast
+#Also graph correlation of the error between the two variables
 
 Preseason_only_df <- Preaseason_vs_Models_df_2 %>%
   filter(Category == "Pre-season") %>%
@@ -1350,6 +920,9 @@ preseason_and_inseason_df_scatter_plot <- Preseason_only_df  %>%
 preseason_and_inseason_df_scatter_plot$Category = as.factor(preseason_and_inseason_df_scatter_plot$Category)
 preseason_and_inseason_df_scatter_plot$`Pre-season Error` = preseason_and_inseason_df_scatter_plot$`Pre-season` - preseason_and_inseason_df_scatter_plot$Observed
 preseason_and_inseason_df_scatter_plot$`In-season Error` = preseason_and_inseason_df_scatter_plot$`In-season` - preseason_and_inseason_df_scatter_plot$Observed
+
+#Output table of forecast error for preseason forecast vs inseason weighted ensemble model
+
 write.csv(preseason_and_inseason_df_scatter_plot, "data/Forecast_error.csv")
 
 Inseason_vs_Preseason_Plot_Scatter_Plot = ggplot(data = preseason_and_inseason_df_scatter_plot)+
@@ -1387,8 +960,10 @@ ggarrange(Inseason_vs_Preseason_Plot_Scatter_Plot, Inseason_vs_Preseason_Error_P
 
 cor(x = preseason_and_inseason_df_scatter_plot$`Pre-season`, y = preseason_and_inseason_df_scatter_plot$`In-season`)
 
-#Obs_vs_Pred_Plot = full_prospective_df_with_weighted[,-4]
 
+#Generate multipanel graph with two rows
+#Top row is retrospective vs prospective fit for weighted model
+#Second row is column graph of observed run size vs year, with points depicting weighted and pre-season predictions for each year
 
 Forecasting_Plot_Weighted
 
@@ -1397,6 +972,10 @@ Obs_vs_Pred_Plot_Weighted
 Inseason_vs_Preseason_Plot
 
 ggarrange(Forecasting_Plot_Weighted, Inseason_vs_Preseason_Plot, ncol = 1, labels = c("A","B")) + theme(plot.margin = margin(.5,1,0,.5, unit = "cm"))  
+
+#Generate multipanel graph with two rows and two columns
+#Top row features total sockeye return abundance vs mean length at age graphs
+#Second row features mean absolute percent difference (averaged across years) between average length on day d of season vs end of season average length
 
 Length_vs_Run_Plot
 
@@ -1408,8 +987,14 @@ ggarrange(ggarrange(Length_vs_Run_Plot_age_2,Length_vs_Run_Plot_age_3, ncol = 2,
 ) +
   theme(plot.margin = margin(.5,1,0,.5, unit = "cm"))  
 
-# Model_Runs_Age_2 = list()
-# Model_Runs_Age_3 = list()
+#This section graphs inseason weighted ensemble model forecast error vs forecast error of current inseason methods for a series of days in the season
+#So x axis is day and y axis is error
+#One line is for the new inseason method with the weighted ensemble model, other line is for existing inseason bayesian method from Curry Cunningham
+
+
+#To do this we need to loop through days and run the models and calculate the weighted prediction on each day
+#Then calculate error from weighted prediction vs observation
+
 Total_Run_1980_2023
 
 days_for_MAPE_Graph = seq(172,198,1)
@@ -1524,6 +1109,8 @@ dates_2 = seq(as.Date(format = "%m/%d", "06/20"), by = "day", length.out = 27)
 
 Method = as.factor(c(rep("Weighted",length(dates_2))))
 
+#Read in performance summary for existing in-season methodology from Curry Cunningham
+
 Currys_metrics = read.csv("data/perf.summary_pred.csv")
 Currys_metrics = Currys_metrics[which(Currys_metrics[,".metric"] == "mape"),]
 dates_curry = seq(as.Date(format = "%m/%d", "06/20"), by = "day", length.out = 27)
@@ -1550,6 +1137,7 @@ colnames(MAPE_over_time_df) = c("MAPE", "Date" , "Method")
 
 MAPE_over_time_df_2 = rbind(MAPE_over_time_df, Curry_DF)
 
+#Graph MAPE for existing inseason method and new weighted inseason forecast method versus day of year
 
 ggplot(data = MAPE_over_time_df_2, aes(x = Date, y = MAPE, lty = Method, color = Method)) +
   geom_line()+
