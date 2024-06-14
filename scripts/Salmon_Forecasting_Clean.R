@@ -43,9 +43,9 @@ OceanTemps1 = read.csv("data/SST-BristolBay3.csv")
 
 #Read in helper scripts
 
-source('scripts/Byweeklengthatage_Function4.R')
-source('scripts/meanrelativeerrorcode.R')
-source('scripts/salmon_regression_models_V5_08_03_2023_cyclic_pink_salmon_2.R')
+source('scripts/lengthatage_Function_clean.R')
+source('scripts/meanrelativeerrorcode_clean.R')
+source('scripts/salmon_regression_models_clean.R')
 
 #Section 01. 
 #Purpose: Reformat ASL updates for 2021, 2022 and 2023 seasons to be in same format
@@ -334,8 +334,8 @@ ModelPredictionsAge3 = one_step_ahead_regression(meanLengths=Age3meanLengths_all
 Age_2_Sum_Sq_DF_Model_3 = array(dim = c(24,3)) #3 variables
 Age_2_R2_Model_3 = c()
 
-Age_3_Sum_Sq_DF_Model_5 = array(dim = c(24,4)) #4 variables
-Age_3_R2_Model_5 = c()
+Age_3_Sum_Sq_DF_Model_3 = array(dim = c(24,3)) #3 variables
+Age_3_R2_Model_3 = c()
 
 
 #Model 7
@@ -345,8 +345,8 @@ for(i in 1:24)
  Age_2_R2_Model_3[i] = ModelPredictionsAge2[["ANOVA"]][[5]][[i]][["adj.r.squared"]]
  Age_2_Sum_Sq_DF_Model_3[i,] = ModelPredictionsAge2[["ANOVA"]][[6]][[i]][["Sum Sq"]][1:3] #3 variables
  
- Age_3_R2_Model_5[i] = ModelPredictionsAge3[["ANOVA"]][[9]][[i]][["adj.r.squared"]]
- Age_3_Sum_Sq_DF_Model_5[i,] = ModelPredictionsAge3[["ANOVA"]][[10]][[i]][["Sum Sq"]][1:4] #4 variables
+ Age_3_R2_Model_3[i] = ModelPredictionsAge3[["ANOVA"]][[5]][[i]][["adj.r.squared"]]
+ Age_3_Sum_Sq_DF_Model_3[i,] = ModelPredictionsAge3[["ANOVA"]][[6]][[i]][["Sum Sq"]][1:3] #3 variables
 
 }
 
@@ -357,10 +357,10 @@ for(i in 1:24)
 #Fix this after Curry makes his comments/revisions
 
 mean_Age_2_R2_Model_3 = mean(Age_2_R2_Model_3)
-mean_Age_3_R2_Model_5 = mean(Age_3_R2_Model_5)
+mean_Age_3_R2_Model_3 = mean(Age_3_R2_Model_3)
 
 Age2_percent_explained = colMeans(Age_2_Sum_Sq_DF_Model_3/rowSums(Age_2_Sum_Sq_DF_Model_3))
-Age3_percent_explained = colMeans(Age_3_Sum_Sq_DF_Model_5/rowSums(Age_3_Sum_Sq_DF_Model_5))
+Age3_percent_explained = colMeans(Age_3_Sum_Sq_DF_Model_3/rowSums(Age_3_Sum_Sq_DF_Model_3))
 
 retrospective_and_onestep_ahead_age2= ModelPredictionsAge2[[1]]
 retrospective_and_onestep_ahead_age3= ModelPredictionsAge3[[1]]
@@ -768,11 +768,11 @@ Weighted_Prediction_Each_Year_df = rbind(Weighted_Prediction_Each_Year_df,retros
 #Also graphs observed run sizes in background
 
 Forecasting_Plot_Weighted = ggplot(data = Weighted_Prediction_Each_Year_df) +
-  geom_line(aes(x = as.numeric(Year), y = Fit, linetype = Type)) +
+  geom_line(aes(x = as.numeric(Year), y = Fit, linetype = Type), size = 1 ) +
   geom_point(data = Weighted_Prediction_Each_Year_df, aes(x = as.numeric(Year), y = Observed_Run), color = "black")+
   labs(x="Year", y="Run Size") +
   geom_vline(xintercept = 2000, color = "red")+
-  scale_linetype_manual(values=c("solid","dotted"))+
+  scale_linetype_manual(values=c("solid","dashed"))+
   scale_y_continuous(name = "", breaks = c(15, 25, 35, 45, 55, 65, 75,85), limits = c(15, 85))+
   theme_classic()+
   
@@ -798,16 +798,16 @@ Forecasting_Plot_Weighted
 
 Obs_vs_Pred_Plot_Weighted <- ggplot(data = Weighted_Prediction_Each_Year_df, 
                                     aes(x = Fit, y = Observed_Run)) +
-  geom_point() +
+  geom_point(size = 2.5) +
   labs(x= "Predicted (in millions)", y="Observed (in millions)") +
   geom_abline(intercept = 0, slope = 1, color = "black")+
   theme_classic()+
   theme(plot.margin = margin(1,1,0,1, unit = "cm"),
-        axis.text.x = element_text(size = 12),
-        axis.title.x = element_text(size = 13),
-        axis.text.y = element_text(size = 12),
-        axis.title.y = element_text(size = 13),
-        strip.text.x = element_text(size = 13, hjust = 0),
+        axis.text.x = element_text(size = 13),
+        axis.title.x = element_text(size = 14),
+        axis.text.y = element_text(size = 13),
+        axis.title.y = element_text(size = 14),
+        strip.text.x = element_text(size = 14, hjust = 0),
         
         strip.background = element_rect(color="white", fill="white", linetype="solid"))+
   scale_y_continuous(name = "Observed (in millions)", breaks = c(15, 25, 35, 45, 55, 65, 75,85), limits = c(15, 85))+
@@ -833,7 +833,7 @@ Percent_error = Percent_Absolute_Error(one_step_ahead_ModelPredictions_All_Ages,
 Percent_Error_Model_7_age_2 = Percent_error[,7]
 Percent_Error_Model_5_age_3 = Percent_error[,18]
 
-Mean_error = Mean_Absolute_Error(one_step_ahead_ModelPredictions_All_Ages[,],observations=Total_Run_2000_2023)
+Mean_error = Mean_Absolute_Error(one_step_ahead_ModelPredictions_All_Ages,observations=Total_Run_2000_2023)
 
 Max_error = Maximum_Error(one_step_ahead_ModelPredictions_All_Ages,observations=Total_Run_2000_2023)
 
@@ -876,23 +876,25 @@ Preaseason_vs_Models_df_2$Category = ordered(Preaseason_vs_Models_df_2$Category,
 Inseason_vs_Preseason_Plot = ggplot()+
   geom_col(data = Preaseason_vs_Models_df_Observed, aes(x = Year, y = Count), 
            col = "black", fill = "lightgrey", width = 0.8) + 
-  geom_point(data = Preaseason_vs_Models_df_2, aes(x = Year, y = Count, shape = Category, color = Category), size = 3)+
-  scale_shape_manual(values = c(19, 19))+
+  geom_point(data = Preaseason_vs_Models_df_2, aes(x = Year, y = Count, color = Category), size = 3)+
+
+  #scale_shape_manual(values = c(19, 19))+
   scale_color_manual(values = c("blue","red"))+
   labs(x = "Year", y = "Observed Run (millions)", title ="" )+
   theme_classic()+
   scale_y_continuous(name = "Observed Run (millions)", breaks = c(5, 15, 25, 35, 45, 55, 65, 75, 85), limits = c(0, 85))+
   scale_x_discrete(name = "Year", breaks = seq(2000,2023,2))+ 
-  theme(legend.margin = margin(0,0,0,0, unit = "cm"),
-        plot.margin = margin(0,0,0,1, unit = "cm"), legend.position = "bottom",
+  theme(legend.position = c(0.4,0.9), legend.margin = margin(0,0,0,0, unit = "cm"),
+        plot.margin = margin(0,0,0,1, unit = "cm"), 
         legend.title = element_blank(),
-        legend.text = element_text(size = 11),
-        axis.text.x = element_text(size = 12),
-        axis.title.x = element_text(size = 13),
-        axis.text.y = element_text(size = 12),
-        axis.title.y = element_text(size = 13),
-  )
+        legend.text = element_text(size = 12),
+        axis.text.x = element_text(size = 13),
+        axis.title.x = element_text(size = 14),
+        axis.text.y = element_text(size = 13),
+        axis.title.y = element_text(size = 14),
+  ) + guides(colour = guide_legend(nrow = 1))
 
+Inseason_vs_Preseason_Plot 
 
 MAPE_preseason = mean(abs(1-(FRI_Preseason_Total_Forecast_2000_2023/(Total_Run_2000_2023))))
 
