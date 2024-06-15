@@ -1154,10 +1154,11 @@ ggplot(data = MAPE_over_time_df_2, aes(x = Date, y = MAPE, lty = Method, color =
         strip.text.x = element_text(size = 15),
         legend.text = element_text(size = 11),
         legend.title = element_text(size = 12),
-        panel.spacing = unit(2, "lines")) 
+        panel.spacing = unit(2, "lines"), legend.position = "bottom") 
 
 
 estimate_age_returns_2023 = read.csv("data/ASL_Export_7-7.csv")
 Salt.Water.Age.2023 = estimate_age_returns_2023[,'age'] %% 10
 mean.Length.2023.age_2 = mean(estimate_age_returns_2023[which(Salt.Water.Age.2023 == 2),"Length"], na.rm = TRUE)
 mean.Length.2023.age_3 = mean(estimate_age_returns_2023[which(Salt.Water.Age.2023 == 3),"Length"], na.rm = TRUE)
+
