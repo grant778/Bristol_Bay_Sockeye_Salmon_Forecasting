@@ -796,7 +796,8 @@ Forecasting_Plot_Weighted
 
 #Graph observations vs weighted predictions to see strength of correlation
 
-Obs_vs_Pred_Plot_Weighted <- ggplot(data = Weighted_Prediction_Each_Year_df, 
+Obs_vs_Pred_Plot_Weighted <- ggplot(data = Weighted_Prediction_Each_Year_df %>%
+                                      filter(Type == "Prospective"), 
                                     aes(x = Fit, y = Observed_Run)) +
   geom_point(size = 2.5) +
   labs(x= "Predicted (in millions)", y="Observed (in millions)") +
