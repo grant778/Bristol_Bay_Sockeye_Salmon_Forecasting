@@ -338,7 +338,7 @@ Age_3_Sum_Sq_DF_Model_3 = array(dim = c(24,3)) #3 variables
 Age_3_R2_Model_3 = c()
 
 
-#Model 7
+#Model 3
 for(i in 1:24)
 {
 
@@ -590,12 +590,12 @@ one_step_ahead_ModelPredictions_Age3 = ModelPredictionsAge3[[2]]
 one_step_ahead_ModelPredictions_All_Ages = cbind(one_step_ahead_ModelPredictions_Age2,
                                                  one_step_ahead_ModelPredictions_Age3)
 
-colnames(one_step_ahead_ModelPredictions_All_Ages) = c("Model 1 Age 2", "Model 2 Age 2","Model 3 Age 2", "Model 4 Age 2","Model 5 Age 2","Model 6", "Model 7", "Model 8", "Model 9", "Model 10", "Model 11", "Model 12", "Model 13",
-                                             "Model 1 Age 3", "Model 2 Age 3","Model 3 Age 3", "Model 4 Age 3","Model 5 Age 3","Model 6", "Model 7", "Model 8", "Model 9", "Model 10", "Model 11", "Model 12", "Model 13")
+colnames(one_step_ahead_ModelPredictions_All_Ages) = c("Model 1 age 2", "Model 2 age 2","Model 3 age 2", "Model 4 age 2","Model 5 age 2","Model 6 age 2", "Model 7 age 2", "Model 8 age 2","Model 9 age 2", "Model 10 age 2", "Model 11 age 2", "Model 12 age 2", "Model 13 age 2", "Model 14 age 2", "Model 15 age 2", "Model 16 age 2", "Model 17 age 2", "Model 18 age 2", "Model 19 age 2", "Model 20 age 2", "Model 21 age 2", "Model 22 age 2", "Model 23 age 2",
+                                                       "Model 1 age 3", "Model 2 age 3","Model 3 age 3", "Model 4 age 3","Model 5 age 3","Model 6 age 3", "Model 7 age 3", "Model 8 age 3","Model 9 age 3", "Model 10 age 3", "Model 11 age 3", "Model 12 age 3", "Model 13 age 3", "Model 14 age 3", "Model 15 age 3", "Model 16 age 3", "Model 17 age 3", "Model 18 age 3", "Model 19 age 3", "Model 20 age 3", "Model 21 age 3", "Model 22 age 3", "Model 23 age 3")
 
 
 
-model_predictions_No_Duplicates = one_step_ahead_ModelPredictions_All_Ages[,1:23] #drop last 3 model with just environmental covariates (these are duplicates)
+model_predictions_No_Duplicates = one_step_ahead_ModelPredictions_All_Ages[,1:35] #drop last 11 model with just environmental covariates and No SaA (these are duplicates)
 
 #Wrangle pre-season data format, ensure the year ranges are correcft
 
@@ -679,7 +679,7 @@ Age3 = one_step_ahead_regression(meanLengths= Age3meanLengths_all_1980_2023,age=
                                                  PreviousSummerMeanTemp=SummerMeanTemp1979to2022,
                                                  PreviousWinterMeanTemp=WinterMeanTemp1979to2023,startyear=1980,endyear=2023,start_test_year = test_start_years[i])
 
-retro_and_one_step = rbind(Age2[[1]][1:10,],Age3[[1]]) #Column names are years, remove duplicate models (non length at age models are 11:13)
+retro_and_one_step = rbind(Age2[[1]][1:12,],Age3[[1]]) #Column names are years, remove duplicate models (non length at age models)
 retro_years = seq(1980,(test_start_years[i]-1),1)
 onestep = t(retro_and_one_step[,length(seq(1980,test_start_years[i],1))])
 retro = t(retro_and_one_step[,as.character(retro_years)]) #We need models as columns for the function to work properly
@@ -832,7 +832,7 @@ Maximum_Error(data.frame(FRI_Preseason_Total_Forecast_2000_2023), observations=T
 
 Percent_error = Percent_Absolute_Error(one_step_ahead_ModelPredictions_All_Ages,observations=Total_Run_2000_2023)
 Percent_Error_Model_7_age_2 = Percent_error[,7]
-Percent_Error_Model_5_age_3 = Percent_error[,18]
+Percent_Error_Model_5_age_3 = Percent_error[,28]
 
 Mean_error = Mean_Absolute_Error(one_step_ahead_ModelPredictions_All_Ages,observations=Total_Run_2000_2023)
 
@@ -847,8 +847,8 @@ correlations = corelation_function(one_step_ahead_ModelPredictions_All_Ages, obs
 
 Results_Table = t(rbind(c(Mean_error, Mean_error_weighted), c(Max_error, Max_error_weighted), c(sd_error, sd_error_weighted), c(correlations, correlation_weighted)))
 
-Age = c(rep("2",10),"NA","NA","NA", rep("3",10),"NA","NA","NA","All")
-Model = (c(c(1:13),c(1:13),"Weighted"))
+Age = c(rep("2",12),rep("NA",11), rep("3",12),rep("NA",11),"All")
+Model = (c(c(1:23),c(1:23),"Weighted"))
 
 Updated_Results_Table = (cbind(Results_Table,Age,Model))
 
@@ -858,7 +858,7 @@ colnames(Updated_Results_Table) = c("Mean Error","Max Error", "SD Error", "Corre
 
 #Output summary statistic table
 
-write.csv(Updated_Results_Table,"data/results_table_06_24.csv" )
+write.csv(Updated_Results_Table,"data/results_table_predictions_for_06_24 (revised oct 13 2024).csv" )
 
 #Graph model inseason predictions versus pre-season prediction
 
@@ -1039,7 +1039,7 @@ for(j in 1:length(days_for_MAPE_Graph))
     df = data.frame(as.matrix(years, ncol = 1))
     colnames(df) = "years"
     
-    age2df <- data.frame(t(Age2[[1]][1:10,]) ) %>%
+    age2df <- data.frame(t(Age2[[1]][1:12,]) ) %>%
       mutate(years = colnames(Age2[[1]]))
     
     age3df <- data.frame(t(Age3[[1]])) %>%

@@ -84,9 +84,54 @@ regressionoutputs_covariates_pink_abundance = list()
 regressionoutputs_covariates_pink_year = list()
 
 
-regressionoutputs_Salmon_Previous_Year_Only  = list()
+#SaA EXCLUDED models
+#This model is total run ~ SaA EXCLUDED + previous year's sockeye return + pink salmon abundance in the previous year
+
+regressionoutputs_no_SaA_PinkSalmon = list() 
+
+#This model is total run ~ SaA EXCLUDED + previous year's sockeye return + odd or even year
+
+regressionoutputs_no_SaA_PinkSalmon_Even_Odd = list() #Binary cyclic pink salmon abundant year or not added as variable (variable indicates odd or even year)
+
+#This model is total run ~ SaA EXCLUDED + previous year's sockeye return + pink salmon abundance in the previous year + previous summer temperature
+
+regressionoutputs_no_SaA_PinkSalmonSummerTemp = list() 
+
+#This model is total run ~ SaA EXCLUDED + previous year's sockeye return + odd or even year + previous summer temperature
+
+regressionoutputs_no_SaA_PinkSalmonSummerTemp_Even_Odd = list() #Binary cyclic pink salmon abundant year or not added as variable 
+
+#This model is total run ~ SaA EXCLUDED + previous year's sockeye return + previous summer temp
+
+regressionoutputs_no_SaA_SummerTemp_No_Pinks = list()
+
+#This model is total run ~ SaA EXCLUDED + previous year's sockeye return + pink salmon abundance in the previous year + previous winter mean SST
+
+regressionoutputs_no_SaA_PinkSalmonWinterTemp = list() #Binary cyclic pink salmon abundant year or not added as variable 
+
+#This model is total run ~ SaA EXCLUDED + previous year's sockeye return + odd or even year + previous winter mean SST
+
+regressionoutputs_no_SaA_PinkSalmonWinterTemp_Even_Odd = list() #Binary cyclic pink salmon abundant year or not added as variable 
+
+#This model is total run ~ SaA EXCLUDED + previous year's sockeye return + previous winter mean SST 
+
+regressionoutputs_no_SaA_WinterTemp_No_Pinks = list()
+
+#This model is total run ~ SaA EXCLUDED + previous year's sockeye return + pink salmon abundance in the previous year + previous summer mean SST + previous winter mean SST
+
+regressionoutputs_no_SaA_covariates_pink_abundance = list()
+
+#This model is total run ~ SaA EXCLUDED + previous year's sockeye return + odd or even year + previous summer mean SST + previous winter mean SST
+
+regressionoutputs_no_SaA_covariates_pink_year = list()
 
 #This model is total run ~ previous year's sockeye return
+
+regressionoutputs_Salmon_Previous_Year_Only  = list()
+
+
+
+
 
 #Identify years with no average length at age on the entered day of the season
 #Identify years with average length at age with 1, and years missing data with 0
@@ -157,6 +202,35 @@ ANOVA_12 = list()
 Summary_13 = list()
 ANOVA_13 = list()
 
+Summary_14 = list()
+ANOVA_14 = list()
+
+Summary_15 = list()
+ANOVA_15 = list()
+
+Summary_16 = list()
+ANOVA_16 = list()
+
+Summary_17 = list()
+ANOVA_17 = list()
+
+Summary_18 = list()
+ANOVA_18 = list()
+
+Summary_19 = list()
+ANOVA_19 = list()
+
+Summary_20 = list()
+ANOVA_20 = list()
+
+Summary_21 = list()
+ANOVA_21 = list()
+
+Summary_22 = list()
+ANOVA_22 = list()
+
+Summary_23 = list()
+ANOVA_23 = list()
 #Run the models looping through each year
 
 iter = 1
@@ -200,11 +274,47 @@ for(i in (nrow(meanLengths)-(length(time[which(time >= start_test_year)]))):(nro
   regressionoutputsWinterTemp_No_Pinks[[iter]] = lm(Total_Run[1:i]~meanLengths[1:i,ncol(meanLengths)]+Total_Run_Previous_Year[1:i]+PreviousWinterMeanTemp[1:i])
   
   
-  regressionoutputs_covariates_pink_abundance[[iter]] = lm(Total_Run[1:i]~Total_Run_Previous_Year[1:i]+pinksalmonPrevious_Year[1:i]+PreviousSummerMeanTemp[1:i]+PreviousWinterMeanTemp[1:i])
+  regressionoutputs_covariates_pink_abundance[[iter]] = lm(Total_Run[1:i]~meanLengths[1:i,ncol(meanLengths)]+Total_Run_Previous_Year[1:i]+pinksalmonPrevious_Year[1:i]+PreviousSummerMeanTemp[1:i]+PreviousWinterMeanTemp[1:i])
   
-  regressionoutputs_covariates_pink_year[[iter]] = lm(Total_Run[1:i]~Total_Run_Previous_Year[1:i]+Odd_Even_Year[1:i]+PreviousSummerMeanTemp[1:i]+PreviousWinterMeanTemp[1:i])
+  regressionoutputs_covariates_pink_year[[iter]] = lm(Total_Run[1:i]~meanLengths[1:i,ncol(meanLengths)]+Total_Run_Previous_Year[1:i]+Odd_Even_Year[1:i]+PreviousSummerMeanTemp[1:i]+PreviousWinterMeanTemp[1:i])
   
+  # SaA EXCLUDED
   regressionoutputs_Salmon_Previous_Year_Only[[iter]] = lm(Total_Run[1:i]~Total_Run_Previous_Year[1:i])
+  
+  
+  regressionoutputs_no_SaA_PinkSalmon[[iter]] = lm(Total_Run[1:i]~Total_Run_Previous_Year[1:i]+pinksalmonPrevious_Year[1:i])
+  
+  regressionoutputs_no_SaA_PinkSalmon_Even_Odd[[iter]] = lm(Total_Run[1:i]~Total_Run_Previous_Year[1:i]+Odd_Even_Year[1:i])
+  #acf(regressionoutputs_no_SaA_PinkSalmon[[i]][["residuals"]])
+  
+  
+  
+  regressionoutputs_no_SaA_PinkSalmonSummerTemp[[iter]] = lm(Total_Run[1:i]~Total_Run_Previous_Year[1:i]+pinksalmonPrevious_Year[1:i]+PreviousSummerMeanTemp[1:i])
+  
+  # cat("\n\nModel 5 regression")
+  # print(summary(regressionoutputs_no_SaA_PinkSalmonSummerTemp[[iter]]))
+  # 
+  regressionoutputs_no_SaA_PinkSalmonSummerTemp_Even_Odd[[iter]] = lm(Total_Run[1:i]~Total_Run_Previous_Year[1:i]+Odd_Even_Year[1:i]+PreviousSummerMeanTemp[1:i])
+  #acf(regressionoutputs_no_SaA_PinkSalmonSummerTemp[[i]][["residuals"]])
+  
+  regressionoutputs_no_SaA_SummerTemp_No_Pinks[[iter]] = lm(Total_Run[1:i]~Total_Run_Previous_Year[1:i]+PreviousSummerMeanTemp[1:i])
+  
+  #cat("\n\nModel 7 regression")
+  #print(summary(regressionoutputs_no_SaA_SummerTemp_No_Pinks[[iter]]))
+  
+  regressionoutputs_no_SaA_PinkSalmonWinterTemp[[iter]] = lm(Total_Run[1:i]~Total_Run_Previous_Year[1:i]+pinksalmonPrevious_Year[1:i]+PreviousWinterMeanTemp[1:i])
+  
+  regressionoutputs_no_SaA_PinkSalmonWinterTemp_Even_Odd[[iter]] = lm(Total_Run[1:i]~Total_Run_Previous_Year[1:i]+Odd_Even_Year[1:i]+PreviousWinterMeanTemp[1:i])
+  #acf(regressionoutputs_no_SaA_PinkSalmonWinterTemp[[i]][["residuals"]])
+  
+  regressionoutputs_no_SaA_WinterTemp_No_Pinks[[iter]] = lm(Total_Run[1:i]~Total_Run_Previous_Year[1:i]+PreviousWinterMeanTemp[1:i])
+  
+  
+  regressionoutputs_no_SaA_covariates_pink_abundance[[iter]] = lm(Total_Run[1:i]~Total_Run_Previous_Year[1:i]+pinksalmonPrevious_Year[1:i]+PreviousSummerMeanTemp[1:i]+PreviousWinterMeanTemp[1:i])
+  
+  regressionoutputs_no_SaA_covariates_pink_year[[iter]] = lm(Total_Run[1:i]~Total_Run_Previous_Year[1:i]+Odd_Even_Year[1:i]+PreviousSummerMeanTemp[1:i]+PreviousWinterMeanTemp[1:i])
+  
+  
   
   #Save model results to output lists
   
@@ -246,10 +356,42 @@ for(i in (nrow(meanLengths)-(length(time[which(time >= start_test_year)]))):(nro
   Summary_12[[iter]] = summary(regressionoutputs_covariates_pink_year[[iter]])
   ANOVA_12[[iter]] = anova(regressionoutputs_covariates_pink_year[[iter]])
   
+  #SaA EXCLUDED
   Summary_13[[iter]] = summary(regressionoutputs_Salmon_Previous_Year_Only[[iter]])
   ANOVA_13[[iter]] = anova(regressionoutputs_Salmon_Previous_Year_Only[[iter]])
   
   # 
+  
+  Summary_14[[iter]] = summary(regressionoutputs_no_SaA_PinkSalmon[[iter]])
+  ANOVA_14[[iter]] = anova(regressionoutputs_no_SaA_PinkSalmon[[iter]])
+  
+  Summary_15[[iter]] = summary(regressionoutputs_no_SaA_PinkSalmon_Even_Odd[[iter]])
+  ANOVA_15[[iter]] = anova(regressionoutputs_no_SaA_PinkSalmon_Even_Odd[[iter]])
+  
+  Summary_16[[iter]] = summary(regressionoutputs_no_SaA_PinkSalmonSummerTemp[[iter]])
+  ANOVA_16[[iter]] = anova(regressionoutputs_no_SaA_PinkSalmonSummerTemp[[iter]])
+  
+  Summary_17[[iter]] = summary(regressionoutputs_no_SaA_PinkSalmonSummerTemp_Even_Odd[[iter]])
+  ANOVA_17[[iter]] = anova(regressionoutputs_no_SaA_PinkSalmonSummerTemp_Even_Odd[[iter]])
+  
+  
+  Summary_18[[iter]] = summary(regressionoutputs_no_SaA_SummerTemp_No_Pinks[[iter]])
+  ANOVA_18[[iter]] = anova(regressionoutputs_no_SaA_SummerTemp_No_Pinks[[iter]])
+  
+  Summary_19[[iter]] = summary(regressionoutputs_no_SaA_PinkSalmonWinterTemp[[iter]])
+  ANOVA_19[[iter]] = anova(regressionoutputs_no_SaA_PinkSalmonWinterTemp[[iter]])
+  
+  Summary_20[[iter]] = summary(regressionoutputs_no_SaA_PinkSalmonWinterTemp_Even_Odd[[iter]])
+  ANOVA_20[[iter]] = anova(regressionoutputs_no_SaA_PinkSalmonWinterTemp_Even_Odd[[iter]])
+  
+  Summary_21[[iter]] = summary(regressionoutputs_no_SaA_WinterTemp_No_Pinks[[iter]])
+  ANOVA_21[[iter]] = anova(regressionoutputs_no_SaA_WinterTemp_No_Pinks[[iter]])
+  
+  Summary_22[[iter]] = summary(regressionoutputs_no_SaA_covariates_pink_abundance[[iter]])
+  ANOVA_22[[iter]] = anova(regressionoutputs_no_SaA_covariates_pink_abundance[[iter]])
+  
+  Summary_23[[iter]] = summary(regressionoutputs_no_SaA_covariates_pink_year[[iter]])
+  ANOVA_23[[iter]] = anova(regressionoutputs_no_SaA_covariates_pink_year[[iter]])
     print(iter)
 
   
@@ -270,9 +412,19 @@ ANOVA_Info_All_Years =list(Summary_1,ANOVA_1,
                            Summary_10,ANOVA_10,
                            Summary_11,ANOVA_11,
                            Summary_12,ANOVA_12,
-                           Summary_13,ANOVA_13)
+                           Summary_13,ANOVA_13,
+                           Summary_13,ANOVA_14,
+                           Summary_13,ANOVA_15,
+                           Summary_13,ANOVA_16,
+                           Summary_13,ANOVA_17,
+                           Summary_13,ANOVA_18,
+                           Summary_13,ANOVA_19,
+                           Summary_13,ANOVA_20,
+                           Summary_13,ANOVA_21,
+                           Summary_13,ANOVA_22,
+                           Summary_13,ANOVA_23)
 
-ModelPredictions = array(dim = c(length(time[which(time >= start_test_year)]),13))
+ModelPredictions = array(dim = c(length(time[which(time >= start_test_year)]),23))
 
 
 
@@ -299,8 +451,19 @@ for(i in (nrow(meanLengths)-(length(time[which(time >= start_test_year)]))):(nro
   c9 = as.vector(regressionoutputsWinterTemp_No_Pinks[[iter]][["coefficients"]])
   c10 = as.vector(regressionoutputs_covariates_pink_abundance[[iter]][["coefficients"]])
   c11 = as.vector(regressionoutputs_covariates_pink_year[[iter]][["coefficients"]])
+  
+  #NO SaA
   c12 = as.vector(regressionoutputs_Salmon_Previous_Year_Only[[iter]][["coefficients"]])
- 
+  c13 = as.vector(regressionoutputs_no_SaA_PinkSalmon[[iter]][["coefficients"]])
+  c14 = as.vector(regressionoutputs_no_SaA_PinkSalmon_Even_Odd[[iter]][["coefficients"]])
+  c15 = as.vector(regressionoutputs_no_SaA_PinkSalmonSummerTemp[[iter]][["coefficients"]])
+  c16 = as.vector(regressionoutputs_no_SaA_PinkSalmonSummerTemp_Even_Odd[[iter]][["coefficients"]])
+  c17 = as.vector(regressionoutputs_no_SaA_SummerTemp_No_Pinks[[iter]][["coefficients"]])
+  c18 = as.vector(regressionoutputs_no_SaA_PinkSalmonWinterTemp[[iter]][["coefficients"]])
+  c19 = as.vector(regressionoutputs_no_SaA_PinkSalmonWinterTemp_Even_Odd[[iter]][["coefficients"]])
+  c20 = as.vector(regressionoutputs_no_SaA_WinterTemp_No_Pinks[[iter]][["coefficients"]])
+  c21 = as.vector(regressionoutputs_no_SaA_covariates_pink_abundance[[iter]][["coefficients"]])
+  c22 = as.vector(regressionoutputs_no_SaA_covariates_pink_year[[iter]][["coefficients"]])
 
   
   #Extract residuals for each model
@@ -316,7 +479,21 @@ for(i in (nrow(meanLengths)-(length(time[which(time >= start_test_year)]))):(nro
   r9 = as.vector(regressionoutputsWinterTemp_No_Pinks[[iter]][["residuals"]])
   r10 = as.vector(regressionoutputs_covariates_pink_abundance[[iter]][["residuals"]])
   r11 = as.vector(regressionoutputs_covariates_pink_year[[iter]][["residuals"]])
+  
+  #NO SaA
+  
   r12 = as.vector(regressionoutputs_Salmon_Previous_Year_Only[[iter]][["residuals"]])
+  r13 = as.vector(regressionoutputs_no_SaA_PinkSalmon[[iter]][["residuals"]])
+  r14 = as.vector(regressionoutputs_no_SaA_PinkSalmon_Even_Odd[[iter]][["residuals"]])
+  r15 = as.vector(regressionoutputs_no_SaA_PinkSalmonSummerTemp[[iter]][["residuals"]])
+  r16 = as.vector(regressionoutputs_no_SaA_PinkSalmonSummerTemp_Even_Odd[[iter]][["residuals"]])
+  r17 = as.vector(regressionoutputs_no_SaA_SummerTemp_No_Pinks[[iter]][["residuals"]])
+  r18 = as.vector(regressionoutputs_no_SaA_PinkSalmonWinterTemp[[iter]][["residuals"]])
+  r19 = as.vector(regressionoutputs_no_SaA_PinkSalmonWinterTemp_Even_Odd[[iter]][["residuals"]])
+  r20 = as.vector(regressionoutputs_no_SaA_WinterTemp_No_Pinks[[iter]][["residuals"]])
+  r21 = as.vector(regressionoutputs_no_SaA_covariates_pink_abundance[[iter]][["residuals"]])
+  r22 = as.vector(regressionoutputs_no_SaA_covariates_pink_year[[iter]][["residuals"]])
+  
   
   years = seq(start_test_year, 2023, 1)
   
@@ -338,9 +515,26 @@ for(i in (nrow(meanLengths)-(length(time[which(time >= start_test_year)]))):(nro
   p8 = c8[1]+c8[2]*meanLengths[i+1,day-164]+c8[3]*Total_Run_Previous_Year[i+1]+c8[4]*Odd_Even_Year[i+1]+c8[5]*PreviousWinterMeanTemp[i+1]
   p9 = c9[1]+c9[2]*meanLengths[i+1,day-164]+c9[3]*Total_Run_Previous_Year[i+1]+c9[4]*PreviousWinterMeanTemp[i+1]
   
-  p10 = c10[1]+c10[2]*Total_Run_Previous_Year[i+1]+c10[3]*pinksalmonPrevious_Year[i+1]+c10[4]*PreviousSummerMeanTemp[i+1]+c10[5]*PreviousWinterMeanTemp[i+1]
-  p11 = c11[1]+c11[2]*Total_Run_Previous_Year[i+1]+c11[3]*Odd_Even_Year[i+1]+c11[4]*PreviousSummerMeanTemp[i+1]+c11[5]*PreviousWinterMeanTemp[i+1]
+  p10 = c10[1]+c10[2]*meanLengths[i+1,day-164] + c10[3]*Total_Run_Previous_Year[i+1]+c10[4]*pinksalmonPrevious_Year[i+1]+c10[5]*PreviousSummerMeanTemp[i+1]+c10[6]*PreviousWinterMeanTemp[i+1]
+  p11 = c11[1]+c11[2]*meanLengths[i+1,day-164] + c10[3]*Total_Run_Previous_Year[i+1]+c11[4]*Odd_Even_Year[i+1]+c11[5]*PreviousSummerMeanTemp[i+1]+c11[6]*PreviousWinterMeanTemp[i+1]
+ 
+  #No SaA
+   
   p12 = c12[1] + c12[2]*Total_Run_Previous_Year[i+1]
+  
+  p13 = c13[1]+c13[2]*Total_Run_Previous_Year[i+1]+c13[3]*pinksalmonPrevious_Year[i+1]
+  p14 = c14[1]+c14[2]*Total_Run_Previous_Year[i+1]+c14[3]*Odd_Even_Year[i+1]
+  
+  p15 = c15[1]+c15[2]*Total_Run_Previous_Year[i+1]+c15[3]*pinksalmonPrevious_Year[i+1]+c15[4]*PreviousSummerMeanTemp[i+1]
+  p16 = c16[1]+c16[2]*Total_Run_Previous_Year[i+1]+c16[3]*Odd_Even_Year[i+1]+c16[4]*PreviousSummerMeanTemp[i+1]
+  p17 = c17[1]+c17[2]*Total_Run_Previous_Year[i+1]+c17[3]*PreviousSummerMeanTemp[i+1]
+  
+  p18 = c18[1]+c18[2]*Total_Run_Previous_Year[i+1]+c18[3]*pinksalmonPrevious_Year[i+1]+c18[4]*PreviousWinterMeanTemp[i+1]
+  p19 = c19[1]+c19[2]*Total_Run_Previous_Year[i+1]+c19[3]*Odd_Even_Year[i+1]+c19[4]*PreviousWinterMeanTemp[i+1]
+  p20 = c20[1]+c20[2]*Total_Run_Previous_Year[i+1]+c20[3]*PreviousWinterMeanTemp[i+1]
+  
+  p21 = c21[1]+ c21[2]*Total_Run_Previous_Year[i+1]+c21[3]*pinksalmonPrevious_Year[i+1]+c21[4]*PreviousSummerMeanTemp[i+1]+c21[5]*PreviousWinterMeanTemp[i+1]
+  p22 = c22[1]+ c21[2]*Total_Run_Previous_Year[i+1]+c22[3]*Odd_Even_Year[i+1]+c22[4]*PreviousSummerMeanTemp[i+1]+c22[5]*PreviousWinterMeanTemp[i+1]
   
 
   #Save model predictions to dataframe
@@ -358,7 +552,16 @@ for(i in (nrow(meanLengths)-(length(time[which(time >= start_test_year)]))):(nro
   ModelPredictions[iter,11] = p10
   ModelPredictions[iter,12] = p11
   ModelPredictions[iter,13] = p12
-  
+  ModelPredictions[iter,14] = p13
+  ModelPredictions[iter,15] = p14
+  ModelPredictions[iter,16] = p15
+  ModelPredictions[iter,17] = p16
+  ModelPredictions[iter,18] = p17
+  ModelPredictions[iter,19] = p18
+  ModelPredictions[iter,20] = p19
+  ModelPredictions[iter,21] = p20
+  ModelPredictions[iter,22] = p21
+  ModelPredictions[iter,23] = p22
  
   #Save model fits
   
@@ -380,9 +583,27 @@ for(i in (nrow(meanLengths)-(length(time[which(time >= start_test_year)]))):(nro
   
   fit10 = (regressionoutputs_covariates_pink_abundance[[iter]][["fitted.values"]])
   fit11 = (regressionoutputs_covariates_pink_year[[iter]][["fitted.values"]])
+  
+  #NO SaA
+  
   fit12 = (regressionoutputs_Salmon_Previous_Year_Only[[iter]][["fitted.values"]])
 
- 
+  fit13 = (regressionoutputs_no_SaA_PinkSalmon[[iter]][["fitted.values"]])
+  fit14 =  (regressionoutputs_no_SaA_PinkSalmon_Even_Odd[[iter]][["fitted.values"]])
+  
+  
+  fit15 = (regressionoutputs_no_SaA_PinkSalmonSummerTemp[[iter]][["fitted.values"]])
+  fit16 = (regressionoutputs_no_SaA_PinkSalmonSummerTemp_Even_Odd[[iter]][["fitted.values"]])
+  fit17 = (regressionoutputs_no_SaA_SummerTemp_No_Pinks[[iter]][["fitted.values"]])
+  
+  
+  fit18 = (regressionoutputs_no_SaA_PinkSalmonWinterTemp[[iter]][["fitted.values"]])
+  fit19 = (regressionoutputs_no_SaA_PinkSalmonWinterTemp_Even_Odd[[iter]][["fitted.values"]])
+  fit20 = (regressionoutputs_no_SaA_WinterTemp_No_Pinks[[iter]][["fitted.values"]])
+  
+  
+  fit21 = (regressionoutputs_no_SaA_covariates_pink_abundance[[iter]][["fitted.values"]])
+  fit22 = (regressionoutputs_no_SaA_covariates_pink_year[[iter]][["fitted.values"]])
 
 
   yearsvector = time
@@ -412,7 +633,19 @@ retrospectiveandonestepahead9 = c(fit8[1:(nrow(meanLengths)-(length(time[which(t
 retrospectiveandonestepahead10 = c(fit9[1:(nrow(meanLengths)-(length(time[which(time >= start_test_year)])))],ModelPredictions[,10])
 retrospectiveandonestepahead11 = c(fit10[1:(nrow(meanLengths)-(length(time[which(time >= start_test_year)])))],ModelPredictions[,11])
 retrospectiveandonestepahead12 = c(fit11[1:(nrow(meanLengths)-(length(time[which(time >= start_test_year)])))],ModelPredictions[,12])
+
+#No SaA
 retrospectiveandonestepahead13 = c(fit12[1:(nrow(meanLengths)-(length(time[which(time >= start_test_year)])))],ModelPredictions[,13])
+retrospectiveandonestepahead14 = c(fit13[1:(nrow(meanLengths)-(length(time[which(time >= start_test_year)])))],ModelPredictions[,14])
+retrospectiveandonestepahead15 = c(fit14[1:(nrow(meanLengths)-(length(time[which(time >= start_test_year)])))],ModelPredictions[,15])
+retrospectiveandonestepahead16 = c(fit15[1:(nrow(meanLengths)-(length(time[which(time >= start_test_year)])))],ModelPredictions[,16])
+retrospectiveandonestepahead17 = c(fit16[1:(nrow(meanLengths)-(length(time[which(time >= start_test_year)])))],ModelPredictions[,17])
+retrospectiveandonestepahead18 = c(fit17[1:(nrow(meanLengths)-(length(time[which(time >= start_test_year)])))],ModelPredictions[,18])
+retrospectiveandonestepahead19 = c(fit18[1:(nrow(meanLengths)-(length(time[which(time >= start_test_year)])))],ModelPredictions[,19])
+retrospectiveandonestepahead20 = c(fit19[1:(nrow(meanLengths)-(length(time[which(time >= start_test_year)])))],ModelPredictions[,20])
+retrospectiveandonestepahead21 = c(fit20[1:(nrow(meanLengths)-(length(time[which(time >= start_test_year)])))],ModelPredictions[,21])
+retrospectiveandonestepahead22 = c(fit21[1:(nrow(meanLengths)-(length(time[which(time >= start_test_year)])))],ModelPredictions[,22])
+retrospectiveandonestepahead23 = c(fit22[1:(nrow(meanLengths)-(length(time[which(time >= start_test_year)])))],ModelPredictions[,23])
 
 
 #par(mfrow=c(1,2))
@@ -420,7 +653,8 @@ retrospectiveandonestepahead13 = c(fit12[1:(nrow(meanLengths)-(length(time[which
 
 
 
-retrospectiveandonestepahead = rbind(retrospectiveandonestepahead1,  
+retrospectiveandonestepahead = rbind(
+retrospectiveandonestepahead1,  
 retrospectiveandonestepahead2,  
 retrospectiveandonestepahead3, 
 retrospectiveandonestepahead4, 
@@ -432,11 +666,20 @@ retrospectiveandonestepahead9,
 retrospectiveandonestepahead10,
 retrospectiveandonestepahead11,
 retrospectiveandonestepahead12,
-retrospectiveandonestepahead13
-
+retrospectiveandonestepahead13,
+retrospectiveandonestepahead14,
+retrospectiveandonestepahead15,
+retrospectiveandonestepahead16,
+retrospectiveandonestepahead17,
+retrospectiveandonestepahead18,
+retrospectiveandonestepahead19,
+retrospectiveandonestepahead20,
+retrospectiveandonestepahead21,
+retrospectiveandonestepahead22,
+retrospectiveandonestepahead23
 )
 
-row.names(retrospectiveandonestepahead) = c("Model 1", "Model 2","Model 3", "Model 4","Model 5","Model 6", "Model 7", "Model 8","Model 9", "Model 10", "Model 11", "Model 12", "Model 13")
+row.names(retrospectiveandonestepahead) = c("Model 1", "Model 2","Model 3", "Model 4","Model 5","Model 6", "Model 7", "Model 8","Model 9", "Model 10", "Model 11", "Model 12", "Model 13", "Model 14", "Model 15", "Model 16", "Model 17", "Model 18", "Model 19", "Model 20", "Model 21", "Model 22", "Model 23")
 
 colnames(retrospectiveandonestepahead) = row.names(meanLengths)[which(is.na(meanLengths[,day-164]) == FALSE)]
 
