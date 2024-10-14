@@ -142,8 +142,8 @@ OceanTemps1979to2020 = OceanTemps1[32:73,]#Truncate so it starts and ends one ye
 OceanTemps1979to2023 = OceanTemps1[32:76,]
 
 pinksalmon = data5[,'pinks']
-pinksalmon_1979to2021 = c(pinksalmon,797) # final 2021 pink salmon was 797 million
-pinksalmon_1979to2022 = c(pinksalmon_1979to2021, 409) 
+pinksalmon_1979to2021 = c(pinksalmon,798) # final 2021 pink salmon was 798 million
+pinksalmon_1979to2022 = c(pinksalmon_1979to2021, 299) #409 in 2022?
 
 seq(from = 1979, to = 2021, by = 1)[16]
 
