@@ -695,7 +695,7 @@ return(Predictions)
 #Model prediction data should be in a data.frame format where rows are test years and columns are different models
 #This format is the natural output of the regression model function above
 
-Mean_Absolute_Error = function(ModelPredictions_All_Ages,observations)
+Mean_Percent_Absolute_Error = function(ModelPredictions_All_Ages,observations)
 {
   
   ModelPredictions= ModelPredictions_All_Ages
@@ -829,7 +829,7 @@ SD_Relative_Error = function(ModelPredictions_All_Ages,observations)
 #Model prediction data should be in a data.frame format where rows are test years and columns are different models
 #This format is the natural output of the regression model function above
 
-Percent_Absolute_Error = function(ModelPredictions_All_Ages,observations)
+Mean_Absolute_Error = function(ModelPredictions_All_Ages,observations)
 {
   
   ModelPredictions= ModelPredictions_All_Ages
@@ -841,12 +841,12 @@ Percent_Absolute_Error = function(ModelPredictions_All_Ages,observations)
   {
     for(j in 1:ncol(ModelPredictions))
     {
-      Absolute_Error[i,j] = abs((ModelPredictions_All_Ages[i,j]-observations[i])/observations[i])
+      Absolute_Error[i,j] = abs((ModelPredictions_All_Ages[i,j]-observations[i]))
     }
   }
   
   
   
-  return((Absolute_Error))
+  return(colMeans(Absolute_Error))
 }
 

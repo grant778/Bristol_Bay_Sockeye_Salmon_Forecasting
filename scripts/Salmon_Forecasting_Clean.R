@@ -816,25 +816,24 @@ Obs_vs_Pred_Plot_Weighted <- ggplot(data = Weighted_Prediction_Each_Year_df %>%
 
 #Calculate summary stats for weighted model out of sample predictions
 
-Mean_error_weighted = Mean_Absolute_Error(data.frame(Weighted_Prediction_Each_Year_2000_2023),observations=Total_Run_2000_2023)
+Mean_error_weighted = Mean_Percent_Absolute_Error(data.frame(Weighted_Prediction_Each_Year_2000_2023),observations=Total_Run_2000_2023)
 Max_error_weighted = Maximum_Error(data.frame(Weighted_Prediction_Each_Year_2000_2023),observations=Total_Run_2000_2023)
 sd_error_weighted = SD_Relative_Error(data.frame(Weighted_Prediction_Each_Year_2000_2023),observations=Total_Run_2000_2023)
 correlation_weighted = corelation_function(data.frame(Weighted_Prediction_Each_Year_2000_2023),observations=Total_Run_2000_2023)                                      
-Percent_error_weighted = Percent_Absolute_Error(data.frame(Weighted_Prediction_Each_Year_2000_2023),observations=Total_Run_2000_2023)
+Mean_Absolute_error_weighted = Mean_Absolute_Error(data.frame(Weighted_Prediction_Each_Year_2000_2023),observations=Total_Run_2000_2023)
 
 #Calculate summary stats for preseason forecast
 
-Mean_Absolute_Error(data.frame(FRI_Preseason_Total_Forecast_2000_2023), observations=Total_Run_2000_2023)
+Mean_Percent_Absolute_Error(data.frame(FRI_Preseason_Total_Forecast_2000_2023), observations=Total_Run_2000_2023)
 
 Maximum_Error(data.frame(FRI_Preseason_Total_Forecast_2000_2023), observations=Total_Run_2000_2023)
 
 #Calculate summary stats for age specific models
 
-Percent_error = Percent_Absolute_Error(one_step_ahead_ModelPredictions_All_Ages,observations=Total_Run_2000_2023)
-Percent_Error_Model_7_age_2 = Percent_error[,7]
-Percent_Error_Model_5_age_3 = Percent_error[,28]
+Absolute_error = Mean_Absolute_Error(one_step_ahead_ModelPredictions_All_Ages,observations=Total_Run_2000_2023)
 
-Mean_error = Mean_Absolute_Error(one_step_ahead_ModelPredictions_All_Ages,observations=Total_Run_2000_2023)
+
+Mean_error = Mean_Percent_Absolute_Error(one_step_ahead_ModelPredictions_All_Ages,observations=Total_Run_2000_2023)
 
 Max_error = Maximum_Error(one_step_ahead_ModelPredictions_All_Ages,observations=Total_Run_2000_2023)
 
@@ -845,7 +844,7 @@ correlations = corelation_function(one_step_ahead_ModelPredictions_All_Ages, obs
 
 #Combine summary statistics into table
 
-Results_Table = t(rbind(c(Mean_error, Mean_error_weighted), c(Max_error, Max_error_weighted), c(sd_error, sd_error_weighted), c(correlations, correlation_weighted)))
+Results_Table = t(rbind(c(Mean_error, Mean_error_weighted), c(Absolute_error, Mean_Absolute_error_weighted), c(Max_error, Max_error_weighted), c(sd_error, sd_error_weighted), c(correlations, correlation_weighted)))
 
 Age = c(rep("2",12),rep("NA",11), rep("3",12),rep("NA",11),"All")
 Model = (c(c(1:23),c(1:23),"Weighted"))
@@ -854,11 +853,11 @@ Updated_Results_Table = (cbind(Results_Table,Age,Model))
 
 Updated_Results_Table = as.matrix(Updated_Results_Table)
 
-colnames(Updated_Results_Table) = c("Mean Error","Max Error", "SD Error", "Correlation", "Age", "Model")
+colnames(Updated_Results_Table) = c("Mean Error", "Absolute Error", "Max Error", "SD Error", "Correlation", "Age", "Model")
 
 #Output summary statistic table
 
-write.csv(Updated_Results_Table,"data/results_table_predictions_for_06_24 (revised oct 13 2024).csv" )
+write.csv(Updated_Results_Table,"data/results_table_predictions_for_06_24 (revised oct 15 2024).csv" )
 
 #Graph model inseason predictions versus pre-season prediction
 
