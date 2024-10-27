@@ -661,9 +661,11 @@ preseason_years = seq(1993,1999,1)
 
 SD_out_of_sample = SD_Error(model_predictions_No_Duplicates, observations=Total_Run_2000_2023)/sqrt(length(Total_Run_2000_2023))
 Var_out_of_sample = SD_out_of_sample^2
+MAPE_out_of_sample = Mean_Percent_Absolute_Error(model_predictions_No_Duplicates,observations=Total_Run_2000_2023)
 
-best_models <- order(Var_out_of_sample, decreasing = FALSE)[1:n_models] #Top 5 models by variance
+best_models <- order(MAPE_out_of_sample, decreasing = FALSE)[1:n_models] #Top 5 models selected by lowest MAPE
 
+colnames(model_predictions_No_Duplicates)[best_models]
 
 step = 0
 
@@ -703,7 +705,7 @@ within_sample_predictions = retro
 
 
 
-#inverse variance for the top 5 inseason models
+#inverse variance for the top 5 inseason models (by MAPE)
 #These weights will be the same for every year
 inverse_var[[step]] = 1/Var_out_of_sample[best_models] 
 model_weights[[step]] = inverse_var[[step]] /sum(inverse_var[[step]])
@@ -842,14 +844,14 @@ Maximum_Error(data.frame(FRI_Preseason_Total_Forecast_2000_2023), observations=T
 
 #Calculate summary stats for age specific models
 
-Absolute_error = Mean_Absolute_Error(one_step_ahead_ModelPredictions_All_Ages,observations=Total_Run_2000_2023)
+Absolute_error = Mean_Absolute_Error(one_step_ahead_ModelPredictions_All_Ages,observations=Total_Run_2000_2023)/1000 #Divide by 1000 to get average maximum error in millions
 
 
-Mean_error = Mean_Percent_Absolute_Error(one_step_ahead_ModelPredictions_All_Ages,observations=Total_Run_2000_2023)
+Mean_error = Mean_Percent_Absolute_Error(one_step_ahead_ModelPredictions_All_Ages,observations=Total_Run_2000_2023)*100
 
-Max_error = Maximum_Error(one_step_ahead_ModelPredictions_All_Ages,observations=Total_Run_2000_2023)
+Max_error = Maximum_Error(one_step_ahead_ModelPredictions_All_Ages,observations=Total_Run_2000_2023)*100
 
-sd_error = SD_Relative_Error(one_step_ahead_ModelPredictions_All_Ages,observations=Total_Run_2000_2023)
+sd_error = SD_Relative_Error(one_step_ahead_ModelPredictions_All_Ages,observations=Total_Run_2000_2023)*100
 
 
 correlations = corelation_function(one_step_ahead_ModelPredictions_All_Ages, observations=Total_Run_2000_2023) 

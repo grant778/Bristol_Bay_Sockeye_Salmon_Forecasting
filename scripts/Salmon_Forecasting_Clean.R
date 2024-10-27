@@ -308,6 +308,9 @@ nrow(Age2meanLengths_all_1980_2023)
 #Purpose: Run the models for age 2 and age 3
 #one_step_ahead_regression() is a function from helper script 'scripts/salmon_regression_models_V5_08_03_2023_cyclic_pink_salmon_2.R'
 
+write.csv(Age2meanLengths_all_1980_2023, "data/Age 2 length at age.csv")
+write.csv(Age3meanLengths_all_1980_2023, "data/Age 3 length at age.csv")
+
 ModelPredictionsAge2 = one_step_ahead_regression(meanLengths= Age2meanLengths_all_1980_2023,age="Age 2", day = 176,  
                                                  Total_Run = Total_Run_1980_2023,
                                                  Total_Run_Previous_Year=Total_Run_Previous_Year_1979to2022,
@@ -695,10 +698,15 @@ Var = SD^2
 #This uses 1980 to t-1 to obtain top 5 models
 ordered_var[[step]] = order(Var, decreasing = FALSE)[1:n_models] #Top 5 models by variance
 
+print(ordered_var)
+
 #inverse variance for the top 5 inseason models
 inverse_var[[step]] = 1/Var[ordered_var[[step]]] 
 model_weights[[step]] = inverse_var[[step]] /sum(inverse_var[[step]])
 #Use these weights to obtain a retrospective weighted in-sample prediction
+#print(model_weights)
+
+#print(model_weights)
 
 #Generate weighted retrospective prediction starting in 1993 to year t-1
 original_predictions = retro[14:length(retro_years),ordered_var[[step]]]
