@@ -659,9 +659,22 @@ preseason_years = seq(1993,1999,1)
 
 
 
-SD_out_of_sample = SD_Error(model_predictions_No_Duplicates, observations=Total_Run_2000_2023)/sqrt(length(Total_Run_2000_2023))
+SD_out_of_sample = SD_Error(model_predictions_No_Duplicates, observations=Total_Run_2000_2023)
 Var_out_of_sample = SD_out_of_sample^2
+
+sd_residuals = c()
+for(j in 1:ncol(model_predictions_No_Duplicates))
+    {
+      sd_residuals[j] = sd(abs(model_predictions_No_Duplicates[,j] - Total_Run_2000_2023))
+}
+
+order(sd_residuals, decreasing = FALSE)
+
 MAPE_out_of_sample = Mean_Percent_Absolute_Error(model_predictions_No_Duplicates,observations=Total_Run_2000_2023)
+
+
+order(SD_out_of_sample, decreasing = FALSE)[1:n_models]
+order(Var_out_of_sample, decreasing = FALSE)[1:n_models]
 
 best_models <- order(MAPE_out_of_sample, decreasing = FALSE)[1:n_models] #Top 5 models selected by lowest MAPE
 
@@ -716,13 +729,21 @@ model_weights[[step]] = inverse_var[[step]] /sum(inverse_var[[step]])
 
 #Generate weighted retrospective prediction starting in 1993 to year t-1
 original_predictions = retro[14:length(retro_years),best_models]
-weighted_predictions[[step]] = data.frame(matrix(rowSums(model_weights[[step]]*original_predictions), ncol = 1))
 
-variance_from_ensemble_within_sample[[step]] = SD_Error(weighted_predictions[[step]], observations=obs[14:length(retro_years)])/sqrt(length(obs[14:length(retro_years)]))                            
+intermediate = original_predictions #make intermediate calculation DF same dimensions as original predictions DF
+for(z in 1:ncol(original_predictions))
+    {
+  intermediate[,z] <- model_weights[[step]][z]*original_predictions[z]
+}
+
+
+weighted_predictions[[step]] = data.frame(matrix(rowSums(intermediate), ncol = 1))
+
+variance_from_ensemble_within_sample[[step]] = SD_Error(weighted_predictions[[step]], observations=obs[14:length(retro_years)])^2                            
 
 length(seq(1993, (test_start_years[i]-1),1))
 
-variance_From_preaseason[[step]] = SD_Error(data.frame(as.matrix(FRI_Preseason_Total_Forecast_1993_2023[1:(length(seq(1993, (test_start_years[i]-1),1)))], ncol = 1)), observations = obs[14:length(retro_years)])/sqrt(length(obs[14:length(retro_years)]))
+variance_From_preaseason[[step]] = SD_Error(data.frame(as.matrix(FRI_Preseason_Total_Forecast_1993_2023[1:(length(seq(1993, (test_start_years[i]-1),1)))], ncol = 1)), observations = obs[14:length(retro_years)])^2
 
 inverse_variance_from_inseason_ensemble_and_preseason[[step]]= 1/c(variance_from_ensemble_within_sample[[step]], variance_From_preaseason[[step]])
 
@@ -1086,13 +1107,23 @@ for(j in 1:length(days_for_MAPE_Graph))
     
     #Generate weighted retrospective prediction starting in 1993 to year t-1
     original_predictions = retro[14:length(retro_years),best_models]
-    weighted_predictions[[step]] = data.frame(matrix(rowSums(model_weights[[step]]*original_predictions), ncol = 1))
     
-    variance_from_ensemble_within_sample[[step]] = SD_Error(weighted_predictions[[step]], observations=Total_Run_1980_2023[14:length(retro_years)])/sqrt(length(Total_Run_1980_2023[14:length(retro_years)]))                            
+    
+    intermediate = original_predictions #make intermediate calculation DF same dimensions as original predictions DF
+    for(z in 1:ncol(original_predictions))
+    {
+      intermediate[,z] <- model_weights[[step]][z]*original_predictions[z]
+    }
+    
+    
+    weighted_predictions[[step]] = data.frame(matrix(rowSums(intermediate), ncol = 1))
+    
+    
+    variance_from_ensemble_within_sample[[step]] = SD_Error(weighted_predictions[[step]], observations=Total_Run_1980_2023[14:length(retro_years)])^2                            
     
     #length(seq(1993, (test_start_years[i]-1),1))
     
-    variance_From_preaseason[[step]] = SD_Error(data.frame(as.matrix(FRI_Preseason_Total_Forecast_1993_2023[1:(length(seq(1993, (test_start_years[i]-1),1)))], ncol = 1)), observations = Total_Run_1980_2023[14:length(retro_years)])/sqrt(length(Total_Run_1980_2023[14:length(retro_years)]))
+    variance_From_preaseason[[step]] = SD_Error(data.frame(as.matrix(FRI_Preseason_Total_Forecast_1993_2023[1:(length(seq(1993, (test_start_years[i]-1),1)))], ncol = 1)), observations = Total_Run_1980_2023[14:length(retro_years)])^2
     
     inverse_variance_from_inseason_ensemble_and_preseason[[step]]= 1/c(variance_from_ensemble_within_sample[[step]], variance_From_preaseason[[step]])
     
