@@ -644,17 +644,20 @@ model_predictions_No_Duplicates_with_preseason[,"Pre-season"] = FRI_Preseason_To
 test_start_years = seq(2000,2023,1)
 n_models = 5
 
-inverse_var = list()
+inverse_MAPE = list()
 model_weights = list()
 weighted_predictions = list()
-variance_from_ensemble_within_sample = list()
-variance_From_preaseason = list()
-inverse_variance_from_inseason_ensemble_and_preseason = list()
+MAPE_from_ensemble_within_sample = list()
+MAPE_From_preaseason = list()
+inverse_MAPE_from_inseason_ensemble_and_preseason = list()
 final_model_weights = list()
-weighted_out_of_sample_prediction = c()
+Final_ensemble_prediction = c()
 preseason_years = seq(1993,1999,1)
+weighted_top_5_out_of_sample_predictions = data.frame(array(dim = c(length(Total_Run_2000_2023),5)))
+inseason_and_preseason_prediction = data.frame(array(dim = c(length(Total_Run_2000_2023),2)))
 
-#ModelPredictionsAge2
+
+
 #Step 1, identify top 5 out of sample models
 
 
@@ -680,6 +683,9 @@ best_models <- order(MAPE_out_of_sample, decreasing = FALSE)[1:n_models] #Top 5 
 
 colnames(model_predictions_No_Duplicates)[best_models]
 
+
+
+
 step = 0
 
 for(i in 1:length(test_start_years))
@@ -687,7 +693,7 @@ for(i in 1:length(test_start_years))
 {  
   
   step = step+1
-
+ print(step)
 #Run models for age 2 and age 3  
 Age2 = one_step_ahead_regression(meanLengths= Age2meanLengths_all_1980_2023,age="Age 2", day = 176,  
                                                  Total_Run = Total_Run_1980_2023,
@@ -707,64 +713,74 @@ Age3 = one_step_ahead_regression(meanLengths= Age3meanLengths_all_1980_2023,age=
                                                  PreviousWinterMeanTemp=WinterMeanTemp1979to2023,startyear=1980,endyear=2023,start_test_year = test_start_years[i])
 
 retro_and_one_step = rbind(Age2[[1]][1:12,],Age3[[1]]) #Column names are years, remove duplicate models (non length at age models)
-retro_years = seq(1980,(test_start_years[i]-1),1)
-onestep = t(retro_and_one_step[,length(seq(1980,test_start_years[i],1))])
-retro = t(retro_and_one_step[,as.character(retro_years)]) #We need models as columns for the function to work properly
+out_of_sample_predictions_full = t(retro_and_one_step[,which(colnames(retro_and_one_step) == "2000"):ncol(retro_and_one_step)])[,best_models]
 
-#Calculate variance from within sample predictions from observed
+#Calculate variance from out of sample predictions from observed for year = 2001 onward
+#For year = 2000 weight each ensemble equally
+# onestep[,best_models] will have all the out of sample predictions
 
-obs = Total_Run_1980_2023[1:(length(retro_years))]
-within_sample_predictions = retro 
 
+out_of_sample_predictions <- data.frame(out_of_sample_predictions_full)
+colnames(out_of_sample_predictions) = colnames(out_of_sample_predictions_full)
+
+colnames(weighted_top_5_out_of_sample_predictions) = colnames(out_of_sample_predictions_full)
+
+if(step == 1)
+{
+  model_weights[[step]] = c(0.2,0.2,0.2,0.2,0.2) #For first step weight all models equally
+  
+  weighted_top_5_out_of_sample_predictions[step,] = model_weights[[step]]*out_of_sample_predictions[step,]
+
+  #For first step, weight in-season and pre-season equally
+  final_model_weights[[step]] = c(0.5, 0.5)
+  inseason_and_preseason_prediction[step,] = c(sum(weighted_top_5_out_of_sample_predictions[step,]),FRI_Preseason_Total_Forecast_2000_2023[step])
+  Final_ensemble_prediction[step] = sum(final_model_weights[[step]]*inseason_and_preseason_prediction[step,] )
+  }else  if(step > 1)
+{
+
+#Calculate weights using data from out of sample predictions from 2000 to t-1
+
+out_of_sample_obs <- Total_Run_2000_2023[1:(step-1)] #t = one through previous year (t-1) when calculating MAPE for weighting
+  
+MAPE_Top_5_Ensemble_Out_of_Sample = Mean_Percent_Absolute_Error(weighted_top_5_out_of_sample_predictions[1:(step-1),], observations=out_of_sample_obs)
 
 
 #inverse variance for the top 5 inseason models (by MAPE)
-#These weights will be the same for every year
-inverse_var[[step]] = 1/Var_out_of_sample[best_models] 
-model_weights[[step]] = inverse_var[[step]] /sum(inverse_var[[step]])
-#Use these weights to obtain a retrospective weighted in-sample prediction
-#print(model_weights)
 
-#print(model_weights)
+inverse_MAPE = 1/MAPE_Top_5_Ensemble_Out_of_Sample
+model_weights[[step]] = inverse_MAPE/sum(inverse_MAPE)
+weighted_top_5_out_of_sample_predictions[step,] = model_weights[[step]]*out_of_sample_predictions[step,]
 
-#Generate weighted retrospective prediction starting in 1993 to year t-1
-original_predictions = retro[14:length(retro_years),best_models]
+#Now weight weighted ensemble prediction vs pre-season
+#Calculate MAPE of weighted ensemble
+#Calculate MAPE of preseason prediction
 
-intermediate = original_predictions #make intermediate calculation DF same dimensions as original predictions DF
-for(z in 1:ncol(original_predictions))
-    {
-  intermediate[,z] <- model_weights[[step]][z]*original_predictions[,z]
-}
+inseason_top_5_vs_preseason = data.frame(inseason_and_preseason_prediction[1:(step-1),])
+colnames(inseason_top_5_vs_preseason) = c("inseason","preseason")
+inseason_top_5_vs_preseason$inseason = as.numeric(inseason_top_5_vs_preseason$inseason)
+inseason_top_5_vs_preseason$preseason = as.numeric(inseason_top_5_vs_preseason$preseason)
+
+#Calculate MAPE
+inseason_vs_preseason_MAPE <- Mean_Percent_Absolute_Error(inseason_top_5_vs_preseason,Total_Run_2000_2023[1:(step-1)])
+inverse_MAPE_from_inseason_ensemble_and_preseason = 1/inseason_vs_preseason_MAPE
+
+final_model_weights[[step]] <- inverse_MAPE_from_inseason_ensemble_and_preseason/sum(inverse_MAPE_from_inseason_ensemble_and_preseason)
 
 
-weighted_predictions[[step]] = data.frame(matrix(rowSums(intermediate), ncol = 1))
-
-variance_from_ensemble_within_sample[[step]] = SD_Error(weighted_predictions[[step]], observations=obs[14:length(retro_years)])^2                            
-
-length(seq(1993, (test_start_years[i]-1),1))
-
-variance_From_preaseason[[step]] = SD_Error(data.frame(as.matrix(FRI_Preseason_Total_Forecast_1993_2023[1:(length(seq(1993, (test_start_years[i]-1),1)))], ncol = 1)), observations = obs[14:length(retro_years)])^2
-
-inverse_variance_from_inseason_ensemble_and_preseason[[step]]= 1/c(variance_from_ensemble_within_sample[[step]], variance_From_preaseason[[step]])
-
-#This calculates weights of weighted inseason models and preseason forecast
-
-final_model_weights[[step]] = inverse_variance_from_inseason_ensemble_and_preseason[[step]]/sum(inverse_variance_from_inseason_ensemble_and_preseason[[step]])
-#Use the final model weights in year t+1 to generate the out of sample (one step ahead) prediction
-
-#So, we need to extract the best 5 models, calculate the inseason forecast based on weights, and multiply them and the preseason by the above weights
-
-one_step_ahead = unlist(onestep)
-top_5_one_step = sum(one_step_ahead[best_models]*model_weights[[step]]) #multiply top 5 by weights and sum to generate weighted inseason prediction
-#Extract top 5 by variance
-one_step_ahead_top_5_and_preseason = c(top_5_one_step, FRI_Preseason_Total_Forecast_1993_2023[length(seq(1993, (test_start_years[i]),1))])
-
-weighted_out_of_sample_prediction[step] = sum(one_step_ahead_top_5_and_preseason*final_model_weights[[step]])
+inseason_and_preseason_prediction[step,] <- c( sum(weighted_top_5_out_of_sample_predictions[step,]), FRI_Preseason_Total_Forecast_2000_2023[step] )
+Final_ensemble_prediction[step] <- sum(final_model_weights[[step]]*inseason_and_preseason_prediction[step,])
 
 }
 
+}
 
-Weighted_Prediction_Each_Year_2000_2023 = weighted_out_of_sample_prediction 
+ensemble_weights <- as.data.frame(model_weights)
+mean_ensemble_weights <- rowMeans(ensemble_weights)
+best_models
+
+colnames(model_predictions_No_Duplicates)[best_models]
+
+Weighted_Prediction_Each_Year_2000_2023 = Final_ensemble_prediction 
 
 #Reformat dataframe, rescale variables
 
@@ -788,16 +804,8 @@ MAPE_Weighted = mean(abs(1-(Weighted_Prediction_Each_Year_df[,"Fit"]/Weighted_Pr
 
 colnames(Weighted_Prediction_Each_Year_df) = c("Model","Year","Fit","Age","Type","Observed_Run")
 
-retrospective_1980_1999 = data.frame(matrix(unlist(weighted_predictions[[1]])/1000, ncol = 1))
-colnames(retrospective_1980_1999) = "Fit"
-retrospective_1980_1999 <- retrospective_1980_1999  %>%
-  mutate(Model = rep("Weighted",length(unlist(weighted_predictions[[1]]))), .before = "Fit" ) %>%
-  mutate(Year = seq(1993,1999,1), .after = "Model") %>%
-  mutate(Age = rep("Weighted",length(unlist(weighted_predictions[[1]]))), .after = "Fit") %>%
-  mutate(Type = rep("Retrospective",length(unlist(weighted_predictions[[1]]))), .after = "Type") %>%
-  mutate(Observed_Run = Total_Run_1980_2023[14:20], .after = "Type") 
 
-Weighted_Prediction_Each_Year_df = rbind(Weighted_Prediction_Each_Year_df,retrospective_1980_1999)
+Weighted_Prediction_Each_Year_df = rbind(Weighted_Prediction_Each_Year_df)
 
 #Graph retrospective fit vs weighted model out of sample predictions
 #Also graphs observed run sizes in background
@@ -806,7 +814,7 @@ Forecasting_Plot_Weighted = ggplot(data = Weighted_Prediction_Each_Year_df) +
   geom_line(aes(x = as.numeric(Year), y = Fit, linetype = Type), size = 1 ) +
   geom_point(data = Weighted_Prediction_Each_Year_df, aes(x = as.numeric(Year), y = Observed_Run), color = "black")+
   labs(x="Year", y="Run Size") +
-  geom_vline(xintercept = 2000, color = "red")+
+  #geom_vline(xintercept = 2000, color = "red")+
   scale_linetype_manual(values=c("solid","dashed"))+
   scale_y_continuous(name = "", breaks = c(15, 25, 35, 45, 55, 65, 75,85), limits = c(15, 85))+
   theme_classic()+
@@ -1038,7 +1046,6 @@ ggarrange(ggarrange(Length_vs_Run_Plot_age_2,Length_vs_Run_Plot_age_3, ncol = 2,
 #To do this we need to loop through days and run the models and calculate the weighted prediction on each day
 #Then calculate error from weighted prediction vs observation
 
-Total_Run_1980_2023
 
 days_for_MAPE_Graph = seq(172,198,1)
 
@@ -1089,61 +1096,73 @@ for(j in 1:length(days_for_MAPE_Graph))
       left_join(age2df, by = "years", keep_all = TRUE) %>%
       left_join(age3df, by = "years", keep_all = TRUE)
     
+    rownames(df) <- df[,1]
+    
     df<-df[,-1]
+  
     
-    retro_years = seq(1980,(test_start_years[i]-1),1)
-    onestep = df[length(seq(1980,test_start_years[i],1)),]
-    retro = df[1:length(retro_years),] #We need models as columns for the function to work properly
+    out_of_sample_predictions_full = df[which(rownames(df) == "2000"):nrow(df),best_models]
     
-    #Calculate variance from within sample predictions from observed
-    #length(seq(1980,1999,1))
-    obs = Total_Run_1980_2023[1:(length(retro_years))]
-    within_sample_predictions = retro 
-
-    #inverse variance for the top 5 inseason models
-    inverse_var[[step]] = 1/Var_out_of_sample[best_models] 
-    model_weights[[step]] = inverse_var[[step]] /sum(inverse_var[[step]])
-    #Use these weights to obtain a retrospective weighted in-sample prediction
-    
-    #Generate weighted retrospective prediction starting in 1993 to year t-1
-    original_predictions = retro[14:length(retro_years),best_models]
+    #Calculate variance from out of sample predictions from observed for year = 2001 onward
+    #For year = 2000 weight each ensemble equally
+    # onestep[,best_models] will have all the out of sample predictions
     
     
-    intermediate = original_predictions #make intermediate calculation DF same dimensions as original predictions DF
-    for(z in 1:ncol(original_predictions))
+    out_of_sample_predictions <- data.frame(out_of_sample_predictions_full)
+    colnames(out_of_sample_predictions) = colnames(out_of_sample_predictions_full)
+    
+    colnames(weighted_top_5_out_of_sample_predictions) = colnames(out_of_sample_predictions_full)
+    
+    if(step == 1)
     {
-      intermediate[,z] <- model_weights[[step]][z]*original_predictions[,z]
-    }
+      model_weights[[step]] = c(0.2,0.2,0.2,0.2,0.2) #For first step weight all models equally
+      
+      weighted_top_5_out_of_sample_predictions[step,] = model_weights[[step]]*out_of_sample_predictions[step,]
+      
+      #For first step, weight in-season and pre-season equally
+      final_model_weights[[step]] = c(0.5, 0.5)
+      inseason_and_preseason_prediction[step,] = c(sum(weighted_top_5_out_of_sample_predictions[step,]),FRI_Preseason_Total_Forecast_2000_2023[step])
+      Final_ensemble_prediction[step] = sum(final_model_weights[[step]]*inseason_and_preseason_prediction[step,] )
+    }else  if(step > 1)
+      
+    {
+      
+      #Calculate weights using data from out of sample predictions from 2000 to t-1
+      
+      out_of_sample_obs <- Total_Run_2000_2023[1:(step-1)] #t = one through previous year (t-1) when calculating MAPE for weighting
+      
+      MAPE_Top_5_Ensemble_Out_of_Sample = Mean_Percent_Absolute_Error(weighted_top_5_out_of_sample_predictions[1:(step-1),], observations=out_of_sample_obs)
+      
+      
+      #inverse variance for the top 5 inseason models (by MAPE)
+      
+      inverse_MAPE = 1/MAPE_Top_5_Ensemble_Out_of_Sample
+      model_weights[[step]] = inverse_MAPE/sum(inverse_MAPE)
+      weighted_top_5_out_of_sample_predictions[step,] = model_weights[[step]]*out_of_sample_predictions[step,]
+      
+      #Now weight weighted ensemble prediction vs pre-season
+      #Calculate MAPE of weighted ensemble
+      #Calculate MAPE of preseason prediction
+      
+      inseason_top_5_vs_preseason = data.frame(inseason_and_preseason_prediction[1:(step-1),])
+      colnames(inseason_top_5_vs_preseason) = c("inseason","preseason")
+      inseason_top_5_vs_preseason$inseason = as.numeric(inseason_top_5_vs_preseason$inseason)
+      inseason_top_5_vs_preseason$preseason = as.numeric(inseason_top_5_vs_preseason$preseason)
+      
+      #Calculate MAPE
+      inseason_vs_preseason_MAPE <- Mean_Percent_Absolute_Error(inseason_top_5_vs_preseason,Total_Run_2000_2023[1:(step-1)])
+      inverse_MAPE_from_inseason_ensemble_and_preseason = 1/inseason_vs_preseason_MAPE
+      
+      final_model_weights[[step]] <- inverse_MAPE_from_inseason_ensemble_and_preseason/sum(inverse_MAPE_from_inseason_ensemble_and_preseason)
+      
+      
+      inseason_and_preseason_prediction[step,] <- c( sum(weighted_top_5_out_of_sample_predictions[step,]), FRI_Preseason_Total_Forecast_2000_2023[step] )
+      Final_ensemble_prediction[step] <- sum(final_model_weights[[step]]*inseason_and_preseason_prediction[step,])
+    }   
     
+    observed_return = Total_Run_2000_2023[step]
     
-    weighted_predictions[[step]] = data.frame(matrix(rowSums(intermediate), ncol = 1))
-    
-    
-    variance_from_ensemble_within_sample[[step]] = SD_Error(weighted_predictions[[step]], observations=Total_Run_1980_2023[14:length(retro_years)])^2                            
-    
-    #length(seq(1993, (test_start_years[i]-1),1))
-    
-    variance_From_preaseason[[step]] = SD_Error(data.frame(as.matrix(FRI_Preseason_Total_Forecast_1993_2023[1:(length(seq(1993, (test_start_years[i]-1),1)))], ncol = 1)), observations = Total_Run_1980_2023[14:length(retro_years)])^2
-    
-    inverse_variance_from_inseason_ensemble_and_preseason[[step]]= 1/c(variance_from_ensemble_within_sample[[step]], variance_From_preaseason[[step]])
-    
-    #This calculates weights of weighted inseason models and preseason forecast
-    
-    final_model_weights[[step]] = inverse_variance_from_inseason_ensemble_and_preseason[[step]]/sum(inverse_variance_from_inseason_ensemble_and_preseason[[step]])
-    #Use the final model weights in year t+1 to generate the out of sample (one step ahead) prediction
-    
-    #So, we need to extract the correct inseason models based on weights, calculate the inseason forecast based on weights, and multiply them and the preseason by the above weights
-    
-    one_step_ahead = unlist(onestep)
-    top_5_one_step = sum(one_step_ahead[best_models]*model_weights[[step]]) #multiply top 5 by weights and sum to generate weighted inseason prediction
-    #Extract top 5 by variance
-    one_step_ahead_top_5_and_preseason = c(top_5_one_step, FRI_Preseason_Total_Forecast_1993_2023[length(seq(1993, (test_start_years[i]),1))])
-    
-    weighted_out_of_sample_prediction[step] = sum(one_step_ahead_top_5_and_preseason*final_model_weights[[step]])
-    
-    observed_return = Total_Run_1980_2023[(length(retro_years)+1)]
-    
-    MAPE[i] = abs(weighted_out_of_sample_prediction[step]-observed_return)/observed_return
+    MAPE[i] = abs(Final_ensemble_prediction[step]-observed_return)/observed_return
   }
   
   
