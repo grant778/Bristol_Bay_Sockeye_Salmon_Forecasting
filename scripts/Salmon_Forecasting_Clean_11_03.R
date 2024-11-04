@@ -598,7 +598,7 @@ colnames(one_step_ahead_ModelPredictions_All_Ages) = c("Model 1 age 2", "Model 2
 
 
 
-model_predictions_No_Duplicates = one_step_ahead_ModelPredictions_All_Ages[,1:35] #drop last 11 model with just environmental covariates and No SaA (these are duplicates)
+model_predictions_No_Duplicates = one_step_ahead_ModelPredictions_All_Ages[,1:35] #drop last 11 models with just environmental covariates and No SaA (these are duplicates)
 
 #Wrangle pre-season data format, ensure the year ranges are correcft
 
@@ -619,15 +619,6 @@ unique(preseason_FRI[,"retYr"])[13]
 
 #Weighted model code
 
-
-#Step 1. Fit Inseason models to data through 1999 
-#Step 2. Use within sample predictions to calculate variance for each of the inseason models up to 1999.
-#Step 3. Record variance for each inseason model.
-#Step 4. Calculate inverse variance weighted inseason ensemble across top 5 inseason models. The top 5 models here are the top 5 from the 2000-2023 period
-#Step 5. Determine variance in predictions from observations with weighted inseason ensemble 1993-1999
-#Step 6. Calculate 1993-1999 variance for preseason forecast
-#Step 7. Weight preseason and inseason ensemble predictions to generate forecast for 2000, based on their variances 1993-1999
-#Step 8. Repeat through 2023
 
 model_standard_errors = list()
 model_standard_errors_with_preseason = list()
@@ -685,6 +676,11 @@ colnames(model_predictions_No_Duplicates)[best_models]
 
 
 
+out_of_sample_predictions <- model_predictions_No_Duplicates[,best_models]
+
+colnames(weighted_top_5_out_of_sample_predictions) = colnames(out_of_sample_predictions)
+
+
 
 step = 0
 
@@ -692,38 +688,19 @@ for(i in 1:length(test_start_years))
   
 {  
   
-  step = step+1
- print(step)
-#Run models for age 2 and age 3  
-Age2 = one_step_ahead_regression(meanLengths= Age2meanLengths_all_1980_2023,age="Age 2", day = 176,  
-                                                 Total_Run = Total_Run_1980_2023,
-                                                 Total_Run_Previous_Year=Total_Run_Previous_Year_1979to2022,
-                                                 pinksalmonPrevious_Year = pinksalmon_1979to2022,
-                                                 Odd_Even_Year = Odd_Even_Year,
-                                                 PreviousSummerMeanTemp=SummerMeanTemp1979to2022,
-                                                 PreviousWinterMeanTemp=WinterMeanTemp1979to2023,startyear=1980,endyear=2023,start_test_year = test_start_years[i])
+step = step+1
 
+print(step) 
 
-Age3 = one_step_ahead_regression(meanLengths= Age3meanLengths_all_1980_2023,age="Age 2", day = 176,  
-                                                 Total_Run = Total_Run_1980_2023,
-                                                 Total_Run_Previous_Year=Total_Run_Previous_Year_1979to2022,
-                                                 pinksalmonPrevious_Year = pinksalmon_1979to2022,
-                                                 Odd_Even_Year = Odd_Even_Year,
-                                                 PreviousSummerMeanTemp=SummerMeanTemp1979to2022,
-                                                 PreviousWinterMeanTemp=WinterMeanTemp1979to2023,startyear=1980,endyear=2023,start_test_year = test_start_years[i])
+#Need to ensure order of models here matches order in model_predictions_No_Duplicates
 
-retro_and_one_step = rbind(Age2[[1]][1:12,],Age3[[1]]) #Column names are years, remove duplicate models (non length at age models)
-out_of_sample_predictions_full = t(retro_and_one_step[,which(colnames(retro_and_one_step) == "2000"):ncol(retro_and_one_step)])[,best_models]
+#Order should be age2, age3, environmental models
+
 
 #Calculate variance from out of sample predictions from observed for year = 2001 onward
 #For year = 2000 weight each ensemble equally
 # onestep[,best_models] will have all the out of sample predictions
 
-
-out_of_sample_predictions <- data.frame(out_of_sample_predictions_full)
-colnames(out_of_sample_predictions) = colnames(out_of_sample_predictions_full)
-
-colnames(weighted_top_5_out_of_sample_predictions) = colnames(out_of_sample_predictions_full)
 
 if(step == 1)
 {
@@ -1056,6 +1033,24 @@ step = 0
 
 for(j in 1:length(days_for_MAPE_Graph))
 {
+  
+  Age2 = one_step_ahead_regression(meanLengths= Age2meanLengths_all_1980_2023,age="Age 2", day = days_for_MAPE_Graph[j],  
+                                   Total_Run = Total_Run_1980_2023,
+                                   Total_Run_Previous_Year=Total_Run_Previous_Year_1979to2022,
+                                   pinksalmonPrevious_Year = pinksalmon_1979to2022,
+                                   Odd_Even_Year = Odd_Even_Year,
+                                   PreviousSummerMeanTemp=SummerMeanTemp1979to2022,
+                                   PreviousWinterMeanTemp=WinterMeanTemp1979to2023,startyear=1980,endyear=2023,start_test_year = 2000)
+  
+  
+  Age3 = one_step_ahead_regression(meanLengths= Age3meanLengths_all_1980_2023,age="Age 2", day = days_for_MAPE_Graph[j],  
+                                   Total_Run = Total_Run_1980_2023,
+                                   Total_Run_Previous_Year=Total_Run_Previous_Year_1979to2022,
+                                   pinksalmonPrevious_Year = pinksalmon_1979to2022,
+                                   Odd_Even_Year = Odd_Even_Year,
+                                   PreviousSummerMeanTemp=SummerMeanTemp1979to2022,
+                                   PreviousWinterMeanTemp=WinterMeanTemp1979to2023,startyear=1980,endyear=2023,start_test_year = 2000)
+  
   step = 0
   for(i in 1:length(test_start_years))
   {
@@ -1063,34 +1058,23 @@ for(j in 1:length(days_for_MAPE_Graph))
     
     step = step+1
     
-    Age2 = one_step_ahead_regression(meanLengths= Age2meanLengths_all_1980_2023,age="Age 2", day = days_for_MAPE_Graph[j],  
-                                     Total_Run = Total_Run_1980_2023,
-                                     Total_Run_Previous_Year=Total_Run_Previous_Year_1979to2022,
-                                     pinksalmonPrevious_Year = pinksalmon_1979to2022,
-                                     Odd_Even_Year = Odd_Even_Year,
-                                     PreviousSummerMeanTemp=SummerMeanTemp1979to2022,
-                                     PreviousWinterMeanTemp=WinterMeanTemp1979to2023,startyear=1980,endyear=2023,start_test_year = test_start_years[i])
-    
-    
-    Age3 = one_step_ahead_regression(meanLengths= Age3meanLengths_all_1980_2023,age="Age 2", day = days_for_MAPE_Graph[j],  
-                                     Total_Run = Total_Run_1980_2023,
-                                     Total_Run_Previous_Year=Total_Run_Previous_Year_1979to2022,
-                                     pinksalmonPrevious_Year = pinksalmon_1979to2022,
-                                     Odd_Even_Year = Odd_Even_Year,
-                                     PreviousSummerMeanTemp=SummerMeanTemp1979to2022,
-                                     PreviousWinterMeanTemp=WinterMeanTemp1979to2023,startyear=1980,endyear=2023,start_test_year = test_start_years[i])
-    
     
     years = as.character(seq(1980,2023,1))
     
     df = data.frame(as.matrix(years, ncol = 1))
     colnames(df) = "years"
     
-    age2df <- data.frame(t(Age2[[1]][1:12,]) ) %>%
+    #Keep all age 2 and environmental models
+    age2df <- data.frame(t(Age2[[1]]) ) %>%
       mutate(years = colnames(Age2[[1]]))
     
-    age3df <- data.frame(t(Age3[[1]])) %>%
+#Need to ensure order of models in df here matches order of models in model_predictions_No_Duplicates
+    
+    #Discard environmental models, keep only age 3 SaA
+    age3df <- data.frame(t(Age3[[1]][1:12,])) %>%
       mutate(years = colnames(Age3[[1]]))
+  
+    #Order is age2, age3, environmental
     
     df<-df %>%
       left_join(age2df, by = "years", keep_all = TRUE) %>%
@@ -1109,9 +1093,9 @@ for(j in 1:length(days_for_MAPE_Graph))
     
     
     out_of_sample_predictions <- data.frame(out_of_sample_predictions_full)
-    colnames(out_of_sample_predictions) = colnames(out_of_sample_predictions_full)
+    colnames(out_of_sample_predictions) = colnames(model_predictions_No_Duplicates)[best_models]
     
-    colnames(weighted_top_5_out_of_sample_predictions) = colnames(out_of_sample_predictions_full)
+    colnames(weighted_top_5_out_of_sample_predictions) = colnames(model_predictions_No_Duplicates)[best_models]
     
     if(step == 1)
     {
