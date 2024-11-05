@@ -680,6 +680,14 @@ out_of_sample_predictions <- model_predictions_No_Duplicates[,best_models]
 
 colnames(weighted_top_5_out_of_sample_predictions) = colnames(out_of_sample_predictions)
 
+1/Mean_Percent_Absolute_Error(model_predictions_No_Duplicates[1:22,best_models],Total_Run_2000_2023)
+
+nrow(model_predictions_No_Duplicates)
+
+(1/Mean_Percent_Absolute_Error(model_predictions_No_Duplicates[1:23,best_models],Total_Run_2000_2023[1:23]))/sum(1/Mean_Percent_Absolute_Error(model_predictions_No_Duplicates[1:23,best_models],Total_Run_2000_2023[1:23]))
+
+(1/Mean_Percent_Absolute_Error(model_predictions_No_Duplicates[,best_models],Total_Run_2000_2023))/sum(1/Mean_Percent_Absolute_Error(model_predictions_No_Duplicates[,best_models],Total_Run_2000_2023))
+
 
 
 step = 0
@@ -717,9 +725,10 @@ if(step == 1)
 
 #Calculate weights using data from out of sample predictions from 2000 to t-1
 
+    
 out_of_sample_obs <- Total_Run_2000_2023[1:(step-1)] #t = one through previous year (t-1) when calculating MAPE for weighting
   
-MAPE_Top_5_Ensemble_Out_of_Sample = Mean_Percent_Absolute_Error(weighted_top_5_out_of_sample_predictions[1:(step-1),], observations=out_of_sample_obs)
+MAPE_Top_5_Ensemble_Out_of_Sample = Mean_Percent_Absolute_Error(out_of_sample_predictions[1:(step-1),,drop = FALSE], observations=out_of_sample_obs)
 
 
 #inverse variance for the top 5 inseason models (by MAPE)
@@ -750,6 +759,20 @@ Final_ensemble_prediction[step] <- sum(final_model_weights[[step]]*inseason_and_
 }
 
 }
+
+#Weighted top 5 SaA ensemble only stats:
+
+SaA_ensemble_prediction <- data.frame(rowSums(weighted_top_5_out_of_sample_predictions))
+
+SaA_ensemble_only_MAPE <- Mean_Percent_Absolute_Error(SaA_ensemble_prediction, Total_Run_2000_2023)*100
+
+SaA_ensemble_only_cor <- cor(unlist(SaA_ensemble_prediction), Total_Run_2000_2023)
+
+SaA_ensemble_only_max_error <- Maximum_Error(SaA_ensemble_prediction, Total_Run_2000_2023)*100
+
+SaA_ensemble_only_mean_abs_error <- Mean_Absolute_Error(SaA_ensemble_prediction, Total_Run_2000_2023)/1000
+
+SaA_ensemble_only_sd_error <- SD_Relative_Error(SaA_ensemble_prediction, Total_Run_2000_2023)*100
 
 ensemble_weights <- as.data.frame(model_weights)
 mean_ensemble_weights <- rowMeans(ensemble_weights)
@@ -864,10 +887,15 @@ correlations = corelation_function(one_step_ahead_ModelPredictions_All_Ages, obs
 
 #Combine summary statistics into table
 
-Results_Table = t(rbind(c(Absolute_error, Mean_Absolute_error_weighted), c(Mean_error, Mean_error_weighted), c(Max_error, Max_error_weighted), c(sd_error, sd_error_weighted), c(correlations, correlation_weighted)))
 
-Age = c(rep("2",12),rep("NA",11), rep("3",12),rep("NA",11),"All")
-Model = (c(c(1:23),c(1:23),"Weighted"))
+Results_Table = t(rbind(c(Absolute_error, SaA_ensemble_only_mean_abs_error, Mean_Absolute_error_weighted), 
+                        c(Mean_error, SaA_ensemble_only_MAPE, Mean_error_weighted), 
+                        c(Max_error, SaA_ensemble_only_max_error , Max_error_weighted), 
+                        c(sd_error, SaA_ensemble_only_sd_error, sd_error_weighted), 
+                        c(correlations, SaA_ensemble_only_cor, correlation_weighted)))
+
+Age = c(rep("2",12),rep("NA",11), rep("3",12),rep("NA",11),"All","All")
+Model = (c(c(1:23),c(1:23),"SaA Ensemble","Weighted"))
 
 Updated_Results_Table = (cbind(Age,Model,Results_Table))
 
@@ -1115,7 +1143,7 @@ for(j in 1:length(days_for_MAPE_Graph))
       
       out_of_sample_obs <- Total_Run_2000_2023[1:(step-1)] #t = one through previous year (t-1) when calculating MAPE for weighting
       
-      MAPE_Top_5_Ensemble_Out_of_Sample = Mean_Percent_Absolute_Error(weighted_top_5_out_of_sample_predictions[1:(step-1),], observations=out_of_sample_obs)
+      MAPE_Top_5_Ensemble_Out_of_Sample = Mean_Percent_Absolute_Error(out_of_sample_predictions[1:(step-1),,drop = FALSE], observations=out_of_sample_obs)
       
       
       #inverse variance for the top 5 inseason models (by MAPE)
