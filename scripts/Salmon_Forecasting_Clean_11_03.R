@@ -680,14 +680,6 @@ out_of_sample_predictions <- model_predictions_No_Duplicates[,best_models]
 
 colnames(weighted_top_5_out_of_sample_predictions) = colnames(out_of_sample_predictions)
 
-1/Mean_Percent_Absolute_Error(model_predictions_No_Duplicates[1:22,best_models],Total_Run_2000_2023)
-
-nrow(model_predictions_No_Duplicates)
-
-(1/Mean_Percent_Absolute_Error(model_predictions_No_Duplicates[1:23,best_models],Total_Run_2000_2023[1:23]))/sum(1/Mean_Percent_Absolute_Error(model_predictions_No_Duplicates[1:23,best_models],Total_Run_2000_2023[1:23]))
-
-(1/Mean_Percent_Absolute_Error(model_predictions_No_Duplicates[,best_models],Total_Run_2000_2023))/sum(1/Mean_Percent_Absolute_Error(model_predictions_No_Duplicates[,best_models],Total_Run_2000_2023))
-
 
 
 step = 0
@@ -702,12 +694,11 @@ print(step)
 
 #Need to ensure order of models here matches order in model_predictions_No_Duplicates
 
-#Order should be age2, age3, environmental models
+#Order should be age2, ENVIRONMENTAL, age 3
 
 
 #Calculate variance from out of sample predictions from observed for year = 2001 onward
 #For year = 2000 weight each ensemble equally
-# onestep[,best_models] will have all the out of sample predictions
 
 
 if(step == 1)
@@ -759,6 +750,13 @@ Final_ensemble_prediction[step] <- sum(final_model_weights[[step]]*inseason_and_
 }
 
 }
+
+
+#Some Checks
+
+(1/Mean_Percent_Absolute_Error(out_of_sample_predictions, Total_Run_2000_2023))/sum((1/Mean_Percent_Absolute_Error(out_of_sample_predictions, Total_Run_2000_2023)))
+
+(1/Mean_Percent_Absolute_Error(out_of_sample_predictions[1:23,], Total_Run_2000_2023[1:23]))/sum((1/Mean_Percent_Absolute_Error(out_of_sample_predictions[1:23,], Total_Run_2000_2023[1:23])))
 
 #Weighted top 5 SaA ensemble only stats:
 
@@ -1102,7 +1100,7 @@ for(j in 1:length(days_for_MAPE_Graph))
     age3df <- data.frame(t(Age3[[1]][1:12,])) %>%
       mutate(years = colnames(Age3[[1]]))
   
-    #Order is age2, age3, environmental
+    #Order is age2, ENVIRONMENTAL, age3
     
     df<-df %>%
       left_join(age2df, by = "years", keep_all = TRUE) %>%
