@@ -697,7 +697,7 @@ print(step)
 #Order should be age2, ENVIRONMENTAL, age 3
 
 
-#Calculate variance from out of sample predictions from observed for year = 2001 onward
+#Calculate MAPE from out of sample predictions from observed for year = 2001 onward
 #For year = 2000 weight each ensemble equally
 
 
@@ -1094,7 +1094,7 @@ for(j in 1:length(days_for_MAPE_Graph))
     age2df <- data.frame(t(Age2[[1]]) ) %>%
       mutate(years = colnames(Age2[[1]]))
     
-#Need to ensure order of models in df here matches order of models in model_predictions_No_Duplicates
+    #Need to ensure order of models in df here matches order of models in model_predictions_No_Duplicates
     
     #Discard environmental models, keep only age 3 SaA
     age3df <- data.frame(t(Age3[[1]][1:12,])) %>%
@@ -1113,9 +1113,8 @@ for(j in 1:length(days_for_MAPE_Graph))
     
     out_of_sample_predictions_full = df[which(rownames(df) == "2000"):nrow(df),best_models]
     
-    #Calculate variance from out of sample predictions from observed for year = 2001 onward
+    #Calculate MAPE from out of sample predictions from observed for year = 2001 onward
     #For year = 2000 weight each ensemble equally
-    # onestep[,best_models] will have all the out of sample predictions
     
     
     out_of_sample_predictions <- data.frame(out_of_sample_predictions_full)
@@ -1175,7 +1174,7 @@ for(j in 1:length(days_for_MAPE_Graph))
     MAPE[i] = abs(Final_ensemble_prediction[step]-observed_return)/observed_return
   }
   
-  
+  #Calculate average MAPE across all test years for each test day j
   Weighted_MAPE_2000_2023_vector[j] = mean(MAPE,na.rm = TRUE) 
   
 }
