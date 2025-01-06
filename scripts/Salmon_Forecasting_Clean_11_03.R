@@ -816,7 +816,7 @@ Forecasting_Plot_Weighted = ggplot(data = Weighted_Prediction_Each_Year_df) +
   labs(x="Year", y="Run Size") +
   #geom_vline(xintercept = 2000, color = "red")+
   scale_linetype_manual(values=c("solid","dashed"))+
-  scale_y_continuous(name = "Observed Run (millions)", breaks = c(15, 25, 35, 45, 55, 65, 75,85), limits = c(15, 85))+
+  scale_y_continuous(name = "Sockeye Run (millions)", breaks = c(15, 25, 35, 45, 55, 65, 75,85), limits = c(15, 85))+
   theme_classic()+
   
   theme(plot.margin = margin(0,.5,.25,1, unit = "cm"),
@@ -930,7 +930,7 @@ Inseason_vs_Preseason_Plot = ggplot()+
 
   #scale_shape_manual(values = c(19, 19))+
   scale_color_manual(values = c("blue","red"))+
-  labs(x = "Year", y = "Observed Run (millions)", title ="" )+
+  labs(x = "Year", y = "Sockeye Run (millions)", title ="" )+
   theme_classic()+
   scale_y_continuous(name = "Observed Run (millions)", breaks = c(5, 15, 25, 35, 45, 55, 65, 75, 85), limits = c(0, 85))+
   scale_x_discrete(name = "Year", breaks = seq(2000,2023,2))+ 
