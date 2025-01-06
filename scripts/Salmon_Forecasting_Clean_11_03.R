@@ -932,7 +932,7 @@ Inseason_vs_Preseason_Plot = ggplot()+
   scale_color_manual(values = c("blue","red"))+
   labs(x = "Year", y = "Sockeye Run (millions)", title ="" )+
   theme_classic()+
-  scale_y_continuous(name = "Observed Run (millions)", breaks = c(5, 15, 25, 35, 45, 55, 65, 75, 85), limits = c(0, 85))+
+  scale_y_continuous(name = "Sockeye Run (millions)", breaks = c(5, 15, 25, 35, 45, 55, 65, 75, 85), limits = c(0, 85))+
   scale_x_discrete(name = "Year", breaks = seq(2000,2023,2))+ 
   theme(legend.position = c(0.4,0.9), legend.margin = margin(0,0,0,0, unit = "cm"),
         plot.margin = margin(0,0,0,1, unit = "cm"), 
