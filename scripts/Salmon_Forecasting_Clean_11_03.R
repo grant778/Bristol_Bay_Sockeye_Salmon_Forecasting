@@ -361,11 +361,6 @@ for(i in 1:24)
 }
 
 
-#IMPORTANT; ERROR IN RESULTS SECTION OF MANUSCRIPT
-#CURRENTLY LISTS BEST AGE 2 MODEL AS INCLUDING SIZE AT AGE, RUN SIZE IN PREVIOUS YEAR, PREVIOUS SUMMERS SST, AND PREVIOUS PINK ABUNDANCE
-#HOWEVER: MODEL 3 IS ONLY LENGTH AT AGE, RUN SIZE IN T-1, AND PINK SALMON ABUNDANCE IN T-1
-#Fix this after Curry makes his comments/revisions
-
 mean_Age_2_R2_Model_3 = mean(Age_2_R2_Model_3)
 mean_Age_3_R2_Model_3 = mean(Age_3_R2_Model_3)
 
@@ -590,7 +585,7 @@ Age_vs_Run_df2[,"Run"] = Age_vs_Run_df2[,"Run"]/1000
  
 #Section 07.
 #This section generates the weighted model predictions.
-#Methodology further described below
+
   
 one_step_ahead_ModelPredictions_Age2 = ModelPredictionsAge2[[2]]
 one_step_ahead_ModelPredictions_Age3 = ModelPredictionsAge3[[2]]
