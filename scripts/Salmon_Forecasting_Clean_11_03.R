@@ -1,3 +1,10 @@
+
+#Author: Grant Woodard
+#Last Updated: 01/06/2025
+#Modifications: Added y axis label to top panel of figure 3 in manuscript, added script author and last updated date.
+
+#Script Purpose:
+
 #This script generates model predictions as well as relevant figures and tables for forecasting Bristol Bay Sockeye returns
 #The various tested models (approximately a dozen) are read in from the helper script "salmon_regression_models_V5_08_03_2023_cyclic_pink_salmon_2.R"
 
@@ -9,7 +16,7 @@ library(ggplot2)
 library(tidyr)
 library(ggpubr)
 
-#Read in data
+#Section 00: Read in data
 
 #Longterm Bristol Bay catch data
 data1 = read.csv("data/BB-sockeye-catch.csv")
