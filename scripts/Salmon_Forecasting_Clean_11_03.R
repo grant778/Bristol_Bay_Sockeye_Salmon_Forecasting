@@ -814,7 +814,7 @@ Forecasting_Plot_Weighted = ggplot(data = Weighted_Prediction_Each_Year_df) +
   labs(x="Year", y="Run Size") +
   #geom_vline(xintercept = 2000, color = "red")+
   scale_linetype_manual(values=c("solid","dashed"))+
-  scale_y_continuous(name = "", breaks = c(15, 25, 35, 45, 55, 65, 75,85), limits = c(15, 85))+
+  scale_y_continuous(name = "Observed Run (millions)", breaks = c(15, 25, 35, 45, 55, 65, 75,85), limits = c(15, 85))+
   theme_classic()+
   
   theme(plot.margin = margin(0,.5,.25,1, unit = "cm"),
