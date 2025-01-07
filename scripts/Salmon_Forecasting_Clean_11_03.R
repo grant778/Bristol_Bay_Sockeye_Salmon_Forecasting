@@ -41,10 +41,6 @@ Totals = read.csv("data/2021.csv") #Bristol Bay sockeye returns from 1950 to 202
 #North Pacific Pink Salmon and Chum Salmon Time series data
 data4 = read.csv("data/pink_chum_salmon_total_abundances.csv")
 
-# 
-# #Age specific returns by watershed
-# estimate_age_returns = read.csv("data/2021_Return_Tables_Bristol_Bay.csv")
-
 #North Pacific Sea surface temperatures
 OceanTemps1 = read.csv("data/SST-BristolBay3.csv")
 
@@ -143,14 +139,14 @@ data_all = data3 #Can only use at aggregate level since escapement is by river a
 #Need 1980 to 2023 for year t vectors and 1979 to 2022 for year t-1 vectors
 
 #Wrangle Pink salmon data
-data5 = data4[20:61,] #truncate so its the starts and ends one year before data1 and 2 (1979 to 2020)
+data5 = data4[20:63,] #truncate so its the starts and ends one year before data1 and 2 (1979 to 2022)
 #Wrangle SST data
 OceanTemps1979to2020 = OceanTemps1[32:73,]#Truncate so it starts and ends one year before data1 and 2 1979 to 2020
 OceanTemps1979to2023 = OceanTemps1[32:76,]
 
 pinksalmon = data5[,'pinks']
-pinksalmon_1979to2021 = c(pinksalmon,798) # final 2021 pink salmon was 798 million
-pinksalmon_1979to2022 = c(pinksalmon_1979to2021, 299) #409 in 2022?
+pinksalmon_1979to2021 = pinksalmon[1:43] # final 2021 pink salmon was 798 million
+pinksalmon_1979to2022 = pinksalmon #299 in 2022
 
 seq(from = 1979, to = 2021, by = 1)[16]
 
