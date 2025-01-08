@@ -1,4 +1,4 @@
-Salmon_Forecasting_Clean_11_03 
+Salmon_Forecasting_Clean_ADFG 
  - The original script used to predict salmon runs in Bristol Bay Alaska.
  - This script uses raw length at age data provided directly from Alaska Department of Fish and Game.
  - In it, you can see how the raw data was processed to obtain mean lengths at age for each day in the fishing season for 1980 through 2023
