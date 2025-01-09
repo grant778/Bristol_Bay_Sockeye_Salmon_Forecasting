@@ -1,6 +1,6 @@
 
 #Author: Grant Woodard
-#Last Updated: 01/06/2025
+#Last Updated: 01/08/2025
 #Modifications: Added y axis label to top panel of figure 3 in manuscript, added script author and last updated date.
 
 #Script Purpose:
@@ -18,28 +18,34 @@ library(ggpubr)
 
 #Section 00: Read in data
 
-#Longterm Bristol Bay catch data
-data1 = read.csv("data/BB-sockeye-catch.csv")
 
-#Longterm Bristol Bay escapement data
-data2 = read.csv("data/BB-sockeye-escapement.csv")
+#Length at age data 
+#rows are years, columns are average length at each day of the fishing season
 
-#Bristol Bay length and age dadta through 2020
-data3 = read.csv("data/BBasl_to_2020.csv")
+Age2meanLengths_all_1980_2023 = data.frame(read_excel("data/Age 2 length at age.xlsx"), check.names = FALSE)
+rownames(Age2meanLengths_all_1980_2023) = seq(1980,2023,1)
 
-#Length and age dadta for 2021, 2022, and 2023
-seasondata2021 = read_excel("data/FDMS2021_V3.xls")
-seasondata2022 = read_excel("data/FDMS2022.xlsx") #updates
-seasondata2023 = read.csv("data/FDMS2023.csv")
+Age2meanLengths_all_1980_2023[is.na(Age2meanLengths_all_1980_2023)] <- NaN
+
+Age3meanLengths_all_1980_2023 = data.frame(read_excel("data/Age 3 length at age.xlsx"), check.names = FALSE)
+rownames(Age3meanLengths_all_1980_2023) = seq(1980,2023,1)
+
+Age3meanLengths_all_1980_2023[is.na(Age3meanLengths_all_1980_2023)] <- NaN
 
 #Preseasons forecast data
 preseason = read.csv("data/Preseason.csv")
 
-#Past reconstructed total run size data
-Totals = read.csv("data/2021.csv") #Bristol Bay sockeye returns from 1950 to 2021
+#Sockeye Total Run
+Total_Run_1980_2023 = read.csv("data/Total_Run_1980_2023.csv")[,"count"]
 
-#North Pacific Pink Salmon and Chum Salmon Time series data
-data4 = read.csv("data/pink_chum_salmon_total_abundances.csv")
+seq(1980, 2023,1)[21]
+
+Total_Run_2000_2023 <- Total_Run_1980_2023[21:length(Total_Run_1980_2023)]
+
+#Sockeye Total Run Previous Year
+Total_Run_Previous_Year_1979to2022 = read.csv("data/Total_Run_Previous_Year_1979to2022.csv")[,"count"]
+#Pink Salmon Abundance Previous Year
+pinksalmon_1979to2022 = read.csv("data/pinksalmon_1979to2022.csv")[,"count"]
 
 #North Pacific Sea surface temperatures
 OceanTemps1 = read.csv("data/SST-BristolBay3.csv")
@@ -51,108 +57,14 @@ source('scripts/meanrelativeerrorcode_clean.R')
 source('scripts/salmon_regression_models_clean.R')
 
 #Section 01. 
-#Purpose: Reformat ASL updates for 2021, 2022 and 2023 seasons to be in same format
 
-seasondata2023$catch_date = format(as.Date(seasondata2023$catch_date, "%m/%d/%Y"), "%Y-%m-%d")
-
-seasondata2023$sample_date = format(as.Date(seasondata2023$sample_date, "%m/%d/%Y"), "%Y-%m-%d")
-
-seasondata2023 <- seasondata2023 %>%
-  mutate(Year = rep(2023, nrow(seasondata2023)), .before = district) %>%
-  rename(ASLProjectType = project_type,
-         Length = length,
-         sampleDate = sample_date)
-
-colnames(seasondata2022)
-colnames(seasondata2023)
-
-#Combine the ASL data for 2021 to 2023 (these are the updates to the original ASL dataset which was through 2020)
-
-seasondata2021_2023 = rbind(seasondata2021,seasondata2022,seasondata2023)
-
-#Additional cleaning/reformatting of the dataframe
-Salt.Water.Age = seasondata2021_2023[,'age'] %% 10 
-
-seasondata2021_2023[,'Salt.Water.Age'] = Salt.Water.Age
-
-#Ensure only Sockeye salmon are used (species_code = 420)
-
-seasondata2021_2023V2 = seasondata2021_2023[which(seasondata2021_2023[,'species_code']==420 ),] #Filter for sockeye
-
-#Reformatting dataframe, ensure variable types are correct
-seasondata2021_2023V2 = as.data.frame(seasondata2021_2023V2[,c("Length","Salt.Water.Age","sampleDate","Year","ASLProjectType")])
-
-seasondata2021_2023V2 = na.omit(seasondata2021_2023V2)
-
-Length2021_2023 = as.numeric(unlist(seasondata2021_2023V2[,"Length"]))
-Salt.Water.Age2021_2023 = as.numeric(unlist(seasondata2021_2023V2[,"Salt.Water.Age"]))
-sampleDate2021_2023 = as.Date(seasondata2021_2023V2$sampleDate)
-
-Year2021_2023 = as.numeric(unlist(seasondata2021_2023V2[,"Year"]))
-
-ASLProjectType2021_2023 = as.numeric(unlist(seasondata2021_2023V2[,"ASLProjectType"]))
-
-ProjectType2021_2023 = ASLProjectType2021_2023 
-
-#Convert numeric project type IDs to the correct character string
-ASLProjectType= c()
-
-for(i in 1:length(ProjectType2021_2023))
-{
-  if(ProjectType2021_2023[i] == 1)
-  {
-    ASLProjectType[i] = "commercial catch"
-  }
-  
-  if(ProjectType2021_2023[i] == 3)
-  {
-    ASLProjectType[i] = "escapement"
-  }
-  
-  
-  if(ProjectType2021_2023[i] == 5)
-  {
-    ASLProjectType[i] = "test fishing"
-  }
-  
-  
-  
-}
-
-ASLProjectType = as.factor(ASLProjectType)
-
-seasondata2021_2023V2 = cbind.data.frame(Length2021_2023,Salt.Water.Age2021_2023,sampleDate2021_2023,Year2021_2023,ASLProjectType)
-colnames(seasondata2021_2023V2) = c("Length","Salt.Water.Age","sampleDate","Year","ASLProjectType")
-seasondata2021_2023V2$sampleDate = as.factor(seasondata2021_2023V2$sampleDate)
-
-data3 = data3[,c("Length","Salt.Water.Age","sampleDate","Year","ASLProjectType")]
-#row.names(data3) = c("Length","Salt.Water.Age","sampleDate","Year","ASLProjectType")
-
-#Add 2021 through 2023 ASL data to the original longterm ASL dataset through 2020
-#So this dataset is now from 1979 through 2023
-data3 = rbind(data3,seasondata2021_2023V2)
-
-data_all = data3 #Can only use at aggregate level since escapement is by river and commercial catch is by district
-
-#Section 02.
-#Purpose: Wrangle SST and pink salmon time series data so they start and end in correct years. 
+#Purpose: Wrangle SST atime series data so they start and end in correct years. 
 #Need 1980 to 2023 for year t vectors and 1979 to 2022 for year t-1 vectors
 
-#Wrangle Pink salmon data
-data5 = data4[20:63,] #truncate so its the starts and ends one year before data1 and 2 (1979 to 2022)
 #Wrangle SST data
 OceanTemps1979to2020 = OceanTemps1[32:73,]#Truncate so it starts and ends one year before data1 and 2 1979 to 2020
 OceanTemps1979to2023 = OceanTemps1[32:76,]
 
-pinksalmon = data5[,'pinks']
-pinksalmon_1979to2021 = pinksalmon[1:43] # final 2021 pink salmon was 798 million
-pinksalmon_1979to2022 = pinksalmon #299 in 2022
-
-seq(from = 1979, to = 2021, by = 1)[16]
-
-pinksalmon_1994to2021 = pinksalmon_1979to2021[16:length(pinksalmon_1979to2021)]
-
-sd(pinksalmon, na.rm = TRUE)
 
 WinterMeanTemp1979to2020 = c()
 SummerMeanTemp1979to2020 = c()
@@ -170,97 +82,7 @@ for(i in 2:(nrow(OceanTemps1979to2023)))
 plot(SummerMeanTemp1979to2022~seq(1979,2022,1))
 plot(WinterMeanTemp1979to2023~seq(1979,2022,1))
 
-
-#Section 03. 
-#Purpose: Calculate average length at each for each day of the season for years 1958 through 2023
-
-meanlengthatagealldata = mean_length_by_week_function2(data_all, 1958, endyear = 2023) #All data including the test fishery
-
-
-x = data.frame(meanlengthatagealldata[[1]]) #age2
-age3 = data.frame(meanlengthatagealldata[[2]])
-#x2 = x[,1:14]
-
-x_percent = array(dim = c(63,18))
-x_percent = x / x[,18]
-
-age3_percent = array(dim = c(63,18))
-age3_percent = age3 / age3[,18]
-
-#all data
-#Extract age 2 length at age data
-Age2meanLengths_all = meanlengthatagealldata[[1]] 
-#Catch data starts in 1963, truncate so this ASL data also starts in 1963.
-#NOTE: earlier versions of the script combined catch and escapement to obtain total returns. Current version uses reconstructed total return tables
-#This truncation at 1963 is a legacy of that earlier methodology but we end up using data only back to 1979 anyway later in the script to the regime shift). 
-#This section is still important to ensure all dataframes and vectors start in the correct year
-Age2meanLengths_all = Age2meanLengths_all[6:nrow(Age2meanLengths_all),] #Truncate at 1963
-
-#Extract age 2 sample sizes
-Age2meanLengths_all_sample_size = meanlengthatagealldata[[3]]
-Age2meanLengths_all_sample_size = Age2meanLengths_all_sample_size[6:nrow(Age2meanLengths_all_sample_size),] 
-
-#Extract age 3 length at age
-Age3meanLengths_all = meanlengthatagealldata[[2]]
-
-#Catch data starts in 1963, truncate so this ASL data also starts in 1963
-
-#NOTE: earlier versions of the script combined catch and escapement to obtain total returns. Current version uses reconstructed total return tables
-#This truncation at 1963 is a legacy of that earlier methodology but we end up using data only back to 1979 anyway later in the script to the regime shift). 
-#This section is still important to ensure all dataframes and vectors start in the correct year
-
-Age3meanLengths_all = Age3meanLengths_all[6:nrow(Age3meanLengths_all),] #Truncate at 1963
-
-#Extract age 3 sample sizes
-Age3meanLengths_all_sample_size = meanlengthatagealldata[[4]]
-Age3meanLengths_all_sample_size = Age3meanLengths_all_sample_size[6:nrow(Age3meanLengths_all_sample_size),] 
-
-Age2meanLengths_all_sample_size_1980_2022 = Age2meanLengths_all_sample_size[18:60,]
-colMeans(Age2meanLengths_all_sample_size_1980_2022,na.rm = TRUE)
-Age3meanLengths_all_sample_size_1980_2022 = Age3meanLengths_all_sample_size[18:60,]
-colMeans(Age3meanLengths_all_sample_size_1980_2022,na.rm = TRUE)
-
-min(Age2meanLengths_all[,1],na.rm = TRUE)
-max(Age2meanLengths_all[,1],na.rm = TRUE)
-
-min(Age3meanLengths_all[,1],na.rm = TRUE)
-max(Age3meanLengths_all[,1],na.rm = TRUE)
-
-#Section 04.
-#Purpose: Calcluates total returns and truncates model variabes to correct timeframe
-#time frame is either 1980 to 2023 or 1979 to 2022 for lagged variables
-
-
-
-#Calculate total return sizes for each year from 1963 to 2021
-
-years = seq(from = 1963, to = 2021, by = 1)
-Total_Run_Original = c()
-for(i in 1:length(years))
-{
-  Total_Run_Original[i] = sum(Totals[which(Totals[,"retYr"] == years[i]),"return"])
-}
-
-Total_Run_Original = c(Total_Run_Original,83281.914, 54485.107 ) # add 2022 estimate 80000, add 2023 estimate #2023 Bristol Bay total run 54,485,107
-Total_Run = Total_Run_Original
-
-
-#Truncate total returns to relevant start and end year (1979 to 2022) since this is autoregressive dataset
-
-Total_Run_Previous_Year_1979to2022 = Total_Run_Original[17:60]
-
-#Truncate total returns to relevant start and end year (1980 to 2023) since this is the response variable (NOT autoregressive term)
-
-#Tested a few different test periods so that is what these different timeframes are for
-Total_Run_2010_2023 = Total_Run_Original[48:61] #2010 to 2023
-Total_Run_2005_2023 = Total_Run_Original[43:61] #2005 to 2023
-Total_Run_2000_2023 = Total_Run_Original[38:61] #2000 to 2023
-Total_Run_1980_2023 = Total_Run_Original[18:61] #1980 to 2023
-
-#Truncate age-length dataframes so they also start in 1980 and end in 2023
-
-Age2meanLengths_all_1980_2023 = Age2meanLengths_all[18:61,]
-Age3meanLengths_all_1980_2023 = Age3meanLengths_all[18:61,]
+#Section 02
 
 #Identify odd or even year for model term
 par(mfrow=c(1,2))
@@ -294,7 +116,7 @@ set.seed(2)
 #Add row and column names to dataframe
 row_names = rownames(Age2meanLengths_all_1980_2023)
 col_names = colnames(Age2meanLengths_all_1980_2023)
-
+  
 #Make scaled version of DF to try the effect of scaled variables
 Age2meanLengths_all_1980_2023_scaled = t(apply(Age2meanLengths_all_1980_2023,1, scale))
 Age3meanLengths_all_1980_2023_scaled = t(apply(Age3meanLengths_all_1980_2023,1, scale))
@@ -307,13 +129,13 @@ colnames(Age3meanLengths_all_1980_2023_scaled) = col_names
 
 nrow(Age2meanLengths_all_1980_2023)
 
-#Section 05. 
+#Section 03. 
 #Purpose: Run the models for age 2 and age 3
 #one_step_ahead_regression() is a function from helper script 'scripts/salmon_regression_models_V5_08_03_2023_cyclic_pink_salmon_2.R'
 
-write.csv(Age2meanLengths_all_1980_2023, "data/Age 2 length at age.csv")
-write.csv(Age3meanLengths_all_1980_2023, "data/Age 3 length at age.csv")
-
+#write.csv(Age2meanLengths_all_1980_2023, "data/Age 2 length at age.csv")
+#write.csv(Age3meanLengths_all_1980_2023, "data/Age 3 length at age.csv")
+          
           
 ModelPredictionsAge2 = one_step_ahead_regression(meanLengths= Age2meanLengths_all_1980_2023,age="Age 2", day = 176,  
                                                  Total_Run = Total_Run_1980_2023,
@@ -372,33 +194,16 @@ par(mfrow=c(1,1))
 
 years = row.names(Age2meanLengths_all_1980_2023)
 
-
-#Section 05.
+#Section 04.
 #Calculate mean size at age for each ocean age class (ocean age 2 and ocean age 3)
 #Calculate mean (across years) difference between mean (within season) size at age up through each day of season vs end of season mean size at age
 
-SizeAtAge2 = data_all[which(data_all[,'Salt.Water.Age'] == 2 & data_all[,'Year'] >= 1963 ),]
+SizeAtAge2 = Age2meanLengths_all_1980_2023 
+MeanSizeAtAge2 = SizeAtAge2[,ncol(SizeAtAge2)]
+
 #No 2006 age 2 length at age
-SizeAtAge3 = data_all[which(data_all[,'Salt.Water.Age'] == 3 & data_all[,'Year'] >= 1963),]
-
-#This vector and the ensuing size at age dataset is years 1980 to 2023
-years = seq(from = 1980, to = 2023)
-
-MeanSizeAtAge2 = c()
-MeanSizeAtAge3 = c() 
-MeanSizeAtAge2_June_24 = c()
-MeanSizeAtAge3_June_24 = c() 
-
-
-for(i in 1:length(years))
-{
-  #Extract average size at age in each year. This gives the full end of year size at age
-  MeanSizeAtAge2[i] = mean(SizeAtAge2[which(SizeAtAge2[,'Year'] == years[i]),'Length'])
-  
-  MeanSizeAtAge3[i] = mean(SizeAtAge3[which(SizeAtAge3[,'Year'] == years[i]),'Length'])
-  
-}
-
+SizeAtAge3 = Age3meanLengths_all_1980_2023
+MeanSizeAtAge3 = SizeAtAge3[,ncol(SizeAtAge3)]
 
 mean_abs_percent_error_age_2 = array(dim = c(nrow = nrow(Age2meanLengths_all_1980_2023), ncol = ncol(Age2meanLengths_all_1980_2023)))
 rownames(mean_abs_percent_error_age_2) = rownames(Age2meanLengths_all_1980_2023)
@@ -410,24 +215,29 @@ colnames(mean_abs_percent_error_age_3) = colnames(Age3meanLengths_all_1980_2023)
 
 
 for(i in 1:nrow(Age2meanLengths_all_1980_2023))
-    {
-      
-      for(j in 1:ncol(Age2meanLengths_all_1980_2023))
-        
-      {
-        
-        mean_abs_percent_error_age_2[i,j] =  100*abs((MeanSizeAtAge2[i] - Age2meanLengths_all_1980_2023[i,j])/MeanSizeAtAge2[i] )
-        mean_abs_percent_error_age_3[i,j] =  100*abs((MeanSizeAtAge3[i] - Age3meanLengths_all_1980_2023[i,j])/MeanSizeAtAge3[i] )
-        
-      }
-     }
+{
+  
+  for(j in 1:ncol(Age2meanLengths_all_1980_2023))
+    
+  {
+    
+    mean_abs_percent_error_age_2[i,j] =  100*abs((MeanSizeAtAge2[i] - Age2meanLengths_all_1980_2023[i,j])/MeanSizeAtAge2[i] )
+    mean_abs_percent_error_age_3[i,j] =  100*abs((MeanSizeAtAge3[i] - Age3meanLengths_all_1980_2023[i,j])/MeanSizeAtAge3[i] )
+    
+  }
+}
 
+
+mean_abs_percent_error_age_2[,90]
+
+mean(mean_abs_percent_error_age_2[,90], na.rm = TRUE)
 
 average_error_by_day_age2 = colMeans(mean_abs_percent_error_age_2, na.rm = TRUE)
 average_error_by_day_age3 = colMeans(mean_abs_percent_error_age_3, na.rm = TRUE)
 
 
-dates = seq(as.Date(format = "%m/%d", "06/13"), by = "day", length.out = 90)
+
+dates = seq(as.Date(format = "%m/%d", "06/13"), by = "day", length.out = 120)
 dates_extended = c(dates,dates)
 
 average_error_df = data.frame(cbind(c(rep("Ocean age-2", ncol(Age2meanLengths_all_1980_2023)), rep("Ocean age-3", ncol(Age3meanLengths_all_1980_2023)))))
@@ -439,6 +249,8 @@ average_error_df[,"Date"] = dates_extended
 
 colnames(average_error_df) = c("Age", "Error", "Date")
 
+average_error_df <- average_error_df %>%
+  filter(Date >= as.Date(format = "%m/%d", "06/15"))
 
 #Section 06.
 #Purpose: Graphing average error in mean length at age through each day of the season vs end of season mean length at age
@@ -452,7 +264,7 @@ Mean_Percent_Difference_Length_Plot <- ggplot(data = average_error_df, aes(x = D
   labs(x="Date", y="Mean Absolute % Difference") +
   facet_wrap(~Age, scales = "free", ncol=1)+
   theme_classic()+
-  scale_x_date(date_breaks = "2 weeks", date_labels = "%m/%d")+
+  scale_x_date(date_breaks = "2 weeks", date_labels = "%m/%d",  limits = as.Date(c("2025-06-16","2025-08-15")))+
   theme(axis.text.x = element_text(size = 12),
         axis.title.x = element_text(size = 13),
         axis.text.y = element_text(size = 12),
@@ -471,7 +283,7 @@ Mean_Percent_Difference_Length_Plot_age_2 <- ggplot(data = average_error_df[whic
   geom_line()+
   labs(x="Date", y="Mean Absolute % Difference") +
   theme_classic()+
-  scale_x_date(date_breaks = "2 weeks", date_labels = "%m/%d")+
+  scale_x_date(date_breaks = "2 weeks", date_labels = "%m/%d", limits = as.Date(c("2025-06-16","2025-08-15")))+
   theme(
         plot.margin = margin(.5,.5,.5,.5, unit = "cm"),
         axis.text.x = element_text(size = 12),
@@ -488,7 +300,7 @@ Mean_Percent_Difference_Length_Plot_age_3 <- ggplot(data = average_error_df[whic
   geom_line()+
   labs(x="Date", y="") +
   theme_classic()+
-  scale_x_date(date_breaks = "2 weeks", date_labels = "%m/%d")+
+  scale_x_date(date_breaks = "2 weeks", date_labels = "%m/%d", limits = as.Date(c("2025-06-16","2025-08-15")))+
   theme(plot.margin = margin(.5,.5,.5,.5, unit = "cm"),
         axis.text.x = element_text(size = 12),
         axis.title.x = element_text(size = 13),
@@ -502,6 +314,7 @@ Mean_Percent_Difference_Length_Plot_age_3 <- ggplot(data = average_error_df[whic
 #Graph Size at age vs run size
 
 Mean_Length = c(MeanSizeAtAge2, MeanSizeAtAge3)
+
 Run = c(Total_Run_1980_2023,Total_Run_1980_2023)
 Age = c(rep("Ocean age-2",length(Total_Run_1980_2023)), rep("Ocean age-3", length(Total_Run_1980_2023)))
 
@@ -1029,11 +842,14 @@ Length_vs_Run_Plot
 
 Mean_Percent_Difference_Length_Plot
 
+
 ggarrange(ggarrange(Length_vs_Run_Plot_age_2,Length_vs_Run_Plot_age_3, ncol = 2, labels = c("A","B")),
           ggarrange(Mean_Percent_Difference_Length_Plot_age_2,Mean_Percent_Difference_Length_Plot_age_3, ncol = 2, nrow = 1, labels = c("C","D")),
           nrow = 2,ncol = 1
 ) +
-  theme(plot.margin = margin(.5,1,0,.5, unit = "cm"))  
+  theme(plot.margin = margin(.5,1,0,.5, unit = "cm"))
+
+ggsave("plots/Figure_2.jpg", width = 7, height = 6  )
 
 #This section graphs inseason weighted ensemble model forecast error vs forecast error of current inseason methods for a series of days in the season
 #So x axis is day and y axis is error

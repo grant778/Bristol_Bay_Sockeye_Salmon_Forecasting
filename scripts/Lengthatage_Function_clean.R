@@ -1,7 +1,7 @@
 #This function is used to calculate average length at age for fish in year y on day d of the fishing season
 #This script is designed to work with the format of the data provided from ADFG, so modifications may be necessary 
 
-mean_length_by_week_function2 = function(data,startyear, endyear)
+mean_length_by_day_function2 = function(data,startyear, endyear)
 {
   
   River_age2 = which(data[,"Salt.Water.Age"] == 2 )
@@ -25,41 +25,41 @@ mean_length_by_week_function2 = function(data,startyear, endyear)
   dateplaceholdersage2 = as.numeric(dateplaceholdersage2)
   dateplaceholdersage3 = as.numeric(dateplaceholdersage3)
   
-  weeksage2 = seq(165,165+89,1)
-  weeksage3 = seq(165,165+89,1)
+  daysage2 = seq(165,165+119,1)
+  daysage3 = seq(165,165+119,1)
   
   
   
   format(as.Date("2020-06-16"),"%j")
   
-  weekdivisionsage2 = list()
-  weekdivisionsage3 = list()
+  daydivisionsage2 = list()
+  daydivisionsage3 = list()
   
-  for (i in 1:90) 
+  for (i in 1:120) 
   {
-    weekdivisionsage2[[i]] = which(dateplaceholdersage2 <= weeksage2[i])
-    weekdivisionsage3[[i]] = which(dateplaceholdersage3 <= weeksage3[i])
+    daydivisionsage2[[i]] = which(dateplaceholdersage2 <= daysage2[i])
+    daydivisionsage3[[i]] = which(dateplaceholdersage3 <= daysage3[i])
   }
   
   
   
   yearsequence = seq(from = startyear, to = endyear)
   
-  meanlengthbyweektable = function(age_specific_data,weekdivisions)
+  meanlengthbydaytable = function(age_specific_data,daydivisions)
   {
-    meanlengthmatrix = array(0, dim = c(length(yearsequence),90))  
-    samplesizematrix = array(NA, dim = c(length(yearsequence),90))  
-    for(j in 1:90)
+    meanlengthmatrix = array(0, dim = c(length(yearsequence),120))  
+    samplesizematrix = array(NA, dim = c(length(yearsequence),120))  
+    for(j in 1:120)
     {
       
-      weekRiverInfo = age_specific_data[weekdivisions[[j]],]
+      dayRiverInfo = age_specific_data[daydivisions[[j]],]
       
       
       for(i in 1:length(yearsequence))
       {
         
-         meanlengthmatrix[i,j] = mean(weekRiverInfo[which(weekRiverInfo[,'Year'] == yearsequence[i]),'Length'],na.rm = TRUE)
-         samplesizematrix[i,j] = length(weekRiverInfo[which(weekRiverInfo[,'Year'] == yearsequence[i]),'Length'])
+         meanlengthmatrix[i,j] = mean(dayRiverInfo[which(dayRiverInfo[,'Year'] == yearsequence[i]),'Length'],na.rm = TRUE)
+         samplesizematrix[i,j] = length(dayRiverInfo[which(dayRiverInfo[,'Year'] == yearsequence[i]),'Length'])
          
       }
     } 
@@ -67,25 +67,25 @@ mean_length_by_week_function2 = function(data,startyear, endyear)
   }
   
  
-  Age2meanLengths = meanlengthbyweektable(River_data_age2,weekdivisionsage2)
+  Age2meanLengths = meanlengthbydaytable(River_data_age2,daydivisionsage2)
   
   RiverAge2meanLengths = Age2meanLengths[[1]]
   row.names(RiverAge2meanLengths) = as.character(yearsequence)
-  colnames(RiverAge2meanLengths) = weeksage2
+  colnames(RiverAge2meanLengths) = daysage2
   
   RiverAge2samplesize = Age2meanLengths[[2]]
   row.names(RiverAge2samplesize) = as.character(yearsequence)
-  colnames(RiverAge2samplesize) = weeksage2
+  colnames(RiverAge2samplesize) = daysage2
   
-  Age3meanLengths = meanlengthbyweektable(River_data_age3,weekdivisionsage3)
+  Age3meanLengths = meanlengthbydaytable(River_data_age3,daydivisionsage3)
   
   RiverAge3meanLengths = Age3meanLengths[[1]]
   row.names(RiverAge3meanLengths) = as.character(yearsequence)
-  colnames(RiverAge3meanLengths) = weeksage3
+  colnames(RiverAge3meanLengths) = daysage3
   
   RiverAge3samplesize = Age3meanLengths[[2]]
   row.names(RiverAge3samplesize) = as.character(yearsequence)
-  colnames(RiverAge3samplesize) = weeksage3
+  colnames(RiverAge3samplesize) = daysage3
   
   testlist = list(RiverAge2meanLengths,RiverAge3meanLengths,RiverAge2samplesize,RiverAge3samplesize)
   
