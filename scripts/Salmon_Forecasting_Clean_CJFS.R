@@ -286,7 +286,7 @@ Mean_Percent_Difference_Length_Plot_age_2 <- ggplot(data = average_error_df[whic
   scale_x_date(date_breaks = "1 weeks", date_labels = "%m/%d", limits = as.Date(c("2025-06-13","2025-08-15")))+
   theme(
         plot.margin = margin(.5,.5,.5,.5, unit = "cm"),
-        axis.text.x = element_text(size = 12),
+        axis.text.x = element_text(size = 12, angle = 45, hjust = 1),
         axis.title.x = element_text(size = 13),
         axis.text.y = element_text(size = 12),
         axis.title.y = element_text(size = 13),
@@ -302,7 +302,7 @@ Mean_Percent_Difference_Length_Plot_age_3 <- ggplot(data = average_error_df[whic
   theme_classic()+
   scale_x_date(date_breaks = "1 weeks", date_labels = "%m/%d", limits = as.Date(c("2025-06-13","2025-08-15")))+
   theme(plot.margin = margin(.5,.5,.5,.5, unit = "cm"),
-        axis.text.x = element_text(size = 12),
+        axis.text.x = element_text(size = 12, angle = 45, hjust = 1),
         axis.title.x = element_text(size = 13),
         axis.text.y = element_text(size = 12),
         axis.title.y = element_text(size = 13),
