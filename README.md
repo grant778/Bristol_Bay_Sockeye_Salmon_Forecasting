@@ -17,7 +17,8 @@ Salmon_Forecasting_Clean_CJFS
 
 - This script should run fully using the data provided to CJFS and provided here on GIT.
 - The principal difference between Salmon_Forecasting_Clean_CJFS and Salmon_Forecasting_Clean_11_03, as alluded to above is Salmon_Forecasting_Clean_CJFS directly uses the processed length at age datasets
--  Data Inputs:
+
+Data Inputs:
   - Age specific size at age data for age 2 and age 3. Rows are years (1980-2023) columns are day of year; Direct model input
     * Age 2 length at age.xlsx; Age 3 length at age.xlsx
   - Preseason Forecast. Preseason run prediction generated in Fall each year for the following summer
