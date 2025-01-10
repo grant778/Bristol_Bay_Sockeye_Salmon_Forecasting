@@ -16,6 +16,11 @@ library(ggplot2)
 library(tidyr)
 library(ggpubr)
 
+#Read in helper scripts
+
+source('scripts/salmon_regression_models_clean.R')
+
+
 #Section 00: Read in data
 
 
@@ -50,11 +55,6 @@ pinksalmon_1979to2022 = read.csv("data/pinksalmon_1979to2022.csv")[,"count"]
 #North Pacific Sea surface temperatures
 OceanTemps1 = read.csv("data/SST-BristolBay3.csv")
 
-#Read in helper scripts
-
-source('scripts/lengthatage_Function_clean.R')
-source('scripts/meanrelativeerrorcode_clean.R')
-source('scripts/salmon_regression_models_clean.R')
 
 #Section 01. 
 
