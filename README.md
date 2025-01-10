@@ -6,7 +6,7 @@ Salmon_Forecasting_Clean_ADFG
       - The raw data used can be obtained upon reasonable request from ADFG.
       - As such, unless the user obtains the data from ADFG, this script will not run as the pre-requisite raw size at age data from ADFG is not provided here or on Dryad
 However, the timeseries datasets of mean length at age for age 2 and age 3 fish are provided here and on Dryad.
-    - These summaries are used in Salmon_Forecasting_Clean_CJFS to predict salmon runs.
+    - These summaries are used in Salmon_Forecasting_Clean_CJFS.R to predict salmon runs.
   
  - Helper Scripts
    * lengthatage_Function_clean.R; Calculates mean size at age from raw ADFG data
