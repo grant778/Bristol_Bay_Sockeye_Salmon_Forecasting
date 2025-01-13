@@ -849,7 +849,7 @@ ggarrange(ggarrange(Length_vs_Run_Plot_age_2,Length_vs_Run_Plot_age_3, ncol = 2,
 ) +
   theme(plot.margin = margin(.5,1,0,.5, unit = "cm"))
 
-ggsave("plots/Figure_2.jpg", width = 7, height = 6  )
+ggsave("plots/Figure_1.jpg", width = 8, height = 7  )
 
 #This section graphs inseason weighted ensemble model forecast error vs forecast error of current inseason methods for a series of days in the season
 #So x axis is day and y axis is error
