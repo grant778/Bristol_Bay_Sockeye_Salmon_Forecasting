@@ -32,7 +32,7 @@ Data Inputs:
   - Ocean temperatures
     * SST-BristolBay3.csv
   - Existing In season Bayesian methodology performance
-    * SST-BristolBay3.csv; Used for graphic comparing new methodology with current methodology
+    * perf.summary_pred; Used for graphic comparing new methodology with current methodology
 
 - Helper Scripts:
   - salmon_regression_models_clean.R; Runs models and calculates performance metrics
